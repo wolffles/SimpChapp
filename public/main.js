@@ -229,7 +229,7 @@ $(function() {
     socket.on('login', (data) => {
       connected = true;
       // Display the welcome message
-      var message = "Welcome to Socket.IO Chat – ";
+      var message = "Welcome to Simpchapp the simple chat app– ";
       log(message, {
         prepend: true
       });
