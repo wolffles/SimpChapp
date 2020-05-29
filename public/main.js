@@ -15,7 +15,7 @@ $(function() {
   
     var $loginPage = $('.login.page'); // The login page
     var $chatPage = $('.chat.page'); // The chatroom page
-    var audio = new Audio("./assets/bell.m4a")
+    var audio = document.getElementById('bell');
   
     // Prompt for setting a username
     var username;
