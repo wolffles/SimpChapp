@@ -21,9 +21,9 @@ $(function() {
     $("#ok").click(function() {
         $( this ).slideUp();
         audio.play(); // Play the empty element to get control
-        audio.src = './assets/bell.m4a'; // Set the real audio source
-        console.log(audio.src)
-      });
+        setTimeout(function(){ audio.src = './assets/bell.m4a';  }, 3000);// Set the real audio source
+    })
+        
 
     // Prompt for setting a username
     var username;
