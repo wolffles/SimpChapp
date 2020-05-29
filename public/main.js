@@ -102,8 +102,6 @@ $(function() {
     if (!$messageDiv[0].className.includes('typing'))
         if (data.username != username){
             audio.play()
-            console.log(data.username)
-            console.log(username)
         }
         
     }
