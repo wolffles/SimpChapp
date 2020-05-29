@@ -12,9 +12,10 @@
         <ul class="messages"></ul>
       </div>
       <input class="inputMessage" placeholder="Type here..."/>
+      <button id="ok">bell</button>
     </li>
     <li class="login page">
-      <div class="form">
+      <div id="entername" class="form" onsubmit="playForm" >
         <h3 class="title">What's your nickname?</h3>
         <input class="usernameInput" type="text" maxlength="14" />
       </div>
@@ -24,6 +25,6 @@
   <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/main.js"></script>
-  <audio id="bell" src="./assets/bell.m4a"></audio>
+  <audio id="bell" src='./assets/bell.m4a'></audio>
 </body>
 </html>
