@@ -15,6 +15,7 @@ $(function() {
   
     var $loginPage = $('.login.page'); // The login page
     var $chatPage = $('.chat.page'); // The chatroom page
+    var audio = new Audio("./assets/bell.m4a")
   
     // Prompt for setting a username
     var username;
@@ -95,8 +96,16 @@ $(function() {
         .data('username', data.username)
         .addClass(typingClass)
         .append($usernameDiv, $messageBodyDiv);
-  
+
       addMessageElement($messageDiv, options);
+
+    if (!$messageDiv[0].className.includes('typing'))
+        if (data.username != username){
+            audio.play()
+            console.log(data.username)
+            console.log(username)
+        }
+        
     }
   
     // Adds the visual chat typing message
