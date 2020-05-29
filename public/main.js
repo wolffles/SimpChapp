@@ -18,8 +18,8 @@ $(function() {
     var audio = document.getElementById('bell')
     // var audio = new Audio('./assets/bell.m4a')
   
-    $("#ok").click(function() {
-        $( this ).slideUp();
+    $("#bellbtn").click(function() {
+        document.getElementById("bellbtn").style.display = "none";
         audio.play(); // Play the empty element to get control
         setTimeout(function(){ audio.src = './assets/bell.m4a';  }, 3000);// Set the real audio source
     })
