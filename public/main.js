@@ -16,6 +16,7 @@ $(function() {
     var $loginPage = $('.login.page'); // The login page
     var $chatPage = $('.chat.page'); // The chatroom page
     var audio = document.getElementById('bell')
+    audio.volume = 0.15;
     // var audio = new Audio('./assets/bell.m4a')
   
     $("#bellbtn").click(function() {
