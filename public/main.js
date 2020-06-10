@@ -17,11 +17,19 @@ $(function() {
     var $chatPage = $('.chat.page'); // The chatroom page
     var audio = document.getElementById('bell')
     audio.volume = 0.15;
+    let bellToggle = true;
     // var audio = new Audio('./assets/bell.m4a')
   
     $("#bellbtn").click(function() {
-        document.getElementById("bellbtn").style.display = "none";
-        audio.play(); // Play the empty element to get control
+        // document.getElementById("bellbtn").style.display = "none";
+        if(bellToggle){
+          document.getElementById("bellbtn").style.borderColor = "grey";
+          bellToggle = false;
+        }else{
+          bellToggle = true;
+          document.getElementById("bellbtn").style.borderColor = "black";
+          audio.play(); // Play the empty element to get control
+        }
         setTimeout(function(){ audio.src = './assets/bell.m4a';  }, 3000);// Set the real audio source
     })
         
@@ -109,7 +117,7 @@ $(function() {
       addMessageElement($messageDiv, options);
 
     if (!$messageDiv[0].className.includes('typing'))
-        if (data.username != username){
+        if (data.username != username && bellToggle){
             audio.play()
         }
         
