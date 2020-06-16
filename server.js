@@ -5,19 +5,25 @@ var path = require('path');
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
 var port = process.env.PORT || 3000;
+const subscriptionHandler = require('./backend/subscriptionHandler');
 
 server.listen(port, () => {
   console.log('Server listening at port %d', port);
 });
+
+//Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 // Routing
 app.use(express.static(path.join(__dirname, 'public'),{
   extensions: ['html']
 }));
 
-// Chatroom
+app.post('/serviceWorker', subscriptionHandler.handlePushNotificationSubscription);
+app.get("/subscription/:id", subscriptionHandler.sendPushNotification);
 
-var numUsers = 0;
+// Chatroom
 var normalUsers = 0;
 var otherUsers = 0;
 
@@ -44,7 +50,7 @@ io.on('connection', (socket) => {
     console.log("joined nothinghere")
     socket.join('nothinghere')
   }else {
-    console.log('joined normal')
+    // console.log('joined normal')
     socket.join('normal')
   }
   var addedUser = false;
