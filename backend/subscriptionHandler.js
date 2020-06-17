@@ -27,7 +27,7 @@ function createHash(input) {
   
   function handlePushNotificationSubscription(req, res) {
     const subscriptionRequest = req.body;
-    // console.log("this is the subscription request", subscriptionRequest)
+    console.log("this is the subscription request", subscriptionRequest)
     const susbscriptionId = createHash(JSON.stringify(subscriptionRequest));
     subscriptions[susbscriptionId] = subscriptionRequest;
     // console.log(subscriptions)

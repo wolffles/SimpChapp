@@ -4,25 +4,43 @@ var app = express();
 var path = require('path');
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
-var port = process.env.PORT || 3000;
 const subscriptionHandler = require('./backend/subscriptionHandler');
+const cors = require("cors");
+const compression = require('compression');
 
-server.listen(port, () => {
-  console.log('Server listening at port %d', port);
-});
+const port = process.env.PORT || 3000;
+const host = process.env.HOSTNAME || "https://localhost/";
+
 
 //Middleware
+// app.use(
+//   cors({
+//     origin(origin,cb) {
+//       console.log(process.env.CORS_ORIGIN)
+//       const whitelist = process.env.CORS_ORIGIN ?  process.env.CORS_ORIGIN.split(",") : [];
+//       cb(null, whitelist.includes(origin));
+//     },
+//     credentials: true
+//   })
+// )
+app.use(compression());
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 
 // Routing
 app.use(express.static(path.join(__dirname, 'public'),{
   extensions: ['html']
 }));
 
-app.post('/serviceWorker', subscriptionHandler.handlePushNotificationSubscription);
+app.post("/swsubscription", subscriptionHandler.handlePushNotificationSubscription);
+app.post('/blank', (req, res) => {
+   res.send(json(req.body))
+})
 app.get("/subscription/:id", subscriptionHandler.sendPushNotification);
 
+server.listen(port, () => {
+  console.log('Server listening at port %d', port);
+});
 // Chatroom
 var normalUsers = 0;
 var otherUsers = 0;
@@ -43,6 +61,21 @@ const roomEmit = (url, socket, data) => {
     });
   }
 }
+
+function handleExit(err) {
+  if (err) {
+    errors.report(err);
+  }
+  if (options.exit) {
+    process.exit();
+  }
+}
+
+process.on("exit", handleExit.bind(null));
+process.on("SIGINT", handleExit.bind(null));
+process.on("SIGTERM", handleExit.bind(null));
+process.on("uncaughtException", handleExit.bind(null));
+
 
 io.on('connection', (socket) => {
   let url = socket.request.headers.referer
@@ -141,13 +174,15 @@ io.on('connection', (socket) => {
         --otherUsers;
         socket.to('nothinghere').emit('user left', {
           username:socket.username,
+          numUsers: otherusers
         })
-    }else{
-      --normalUsers;
-      socket.to('normal').emit('user left', {
-        username: socket.username,
-      });
-    }
+      }else{
+        --normalUsers;
+        socket.to('normal').emit('user left', {
+          username: socket.username,
+          numUsers: normalUsers
+        });
+      }
     }
   });
 });

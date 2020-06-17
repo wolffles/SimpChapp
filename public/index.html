@@ -10,6 +10,8 @@
     <li class="chat page">
     <button id="bellbtn">bell</button>
     <button id="deleteme">deleteme</button>
+    <button id="subscribe">Subscribe</button>
+    <button id="push">push</button>
       <div class="chatArea">
         <ul class="messages"></ul>
       </div>
@@ -26,8 +28,10 @@
   <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/main.js"></script>
-  <script src="/deleteme.js"></script>
-  <script src="/notification.js"></script>
+  <script type="module" src="/http.js" ></script>
+  <script type="module" src="/push-index.js"></script>
+  <script type="module" src="/push-notifications.js" ></script>
+  <script type="module" src="/deleteme.js"></script>
   <audio id="bell" src='./assets/bell.m4a'></audio>
 </body>
 </html>
