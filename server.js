@@ -9,7 +9,9 @@ const subscriptionHandler = require('./backend/subscriptionHandler');
 const port = process.env.PORT || 3000;
 // const host = process.env.HOSTNAME || "https://localhost/";
 
-
+server.listen(port, () => {
+  console.log('Server listening at port %d', port);
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -20,14 +22,9 @@ app.use(express.static(path.join(__dirname, 'public'),{
 }));
 
 app.post("/swsubscription", subscriptionHandler.handlePushNotificationSubscription);
-app.post('/blank', (req, res) => {
-   res.send(json(req.body))
-})
 app.get("/subscription/:id", subscriptionHandler.sendPushNotification);
 
-server.listen(port, () => {
-  console.log('Server listening at port %d', port);
-});
+
 // Chatroom
 var normalUsers = 0;
 var otherUsers = 0;
@@ -49,19 +46,19 @@ const roomEmit = (url, socket, data) => {
   }
 }
 
-function handleExit(err) {
-  if (err) {
-    errors.report(err);
-  }
-  if (options.exit) {
-    process.exit();
-  }
-}
+// function handleExit(err) {
+//   if (err) {
+//     errors.report(err);
+//   }
+//   if (options.exit) {
+//     process.exit();
+//   }
+// }
 
-process.on("exit", handleExit.bind(null));
-process.on("SIGINT", handleExit.bind(null));
-process.on("SIGTERM", handleExit.bind(null));
-process.on("uncaughtException", handleExit.bind(null));
+// process.on("exit", handleExit.bind(null));
+// process.on("SIGINT", handleExit.bind(null));
+// process.on("SIGTERM", handleExit.bind(null));
+// process.on("uncaughtException", handleExit.bind(null));
 
 
 io.on('connection', (socket) => {
