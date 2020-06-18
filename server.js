@@ -5,25 +5,12 @@ var path = require('path');
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
 const subscriptionHandler = require('./backend/subscriptionHandler');
-const cors = require("cors");
-const compression = require('compression');
 
 const port = process.env.PORT || 3000;
 const host = process.env.HOSTNAME || "https://localhost/";
 
 
-//Middleware
-// app.use(
-//   cors({
-//     origin(origin,cb) {
-//       console.log(process.env.CORS_ORIGIN)
-//       const whitelist = process.env.CORS_ORIGIN ?  process.env.CORS_ORIGIN.split(",") : [];
-//       cb(null, whitelist.includes(origin));
-//     },
-//     credentials: true
-//   })
-// )
-app.use(compression());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -91,17 +78,17 @@ io.on('connection', (socket) => {
   // when the client emits 'new message', this listens and executes
   socket.on('new message', (data) => {
     // we tell the client to execute 'new message'
-    // if (url.includes("nothinghere")){
-    //   socket.to('nothinghere').emit('new message', {
-    //     username: socket.username,
-    //     message: data
-    //   });
-    // }else{
-    //   socket.broadcast.emit('new message', {
-    //   username: socket.username,
-    //   message: data
-    //   });
-    // }
+    if (url.includes("nothinghere")){
+      socket.to('nothinghere').emit('new message', {
+        username: socket.username,
+        message: data
+      });
+    }else{
+      socket.broadcast.emit('new message', {
+      username: socket.username,
+      message: data
+      });
+    }
     roomEmit(url,socket,data)
   });
 
