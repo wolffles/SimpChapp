@@ -46,19 +46,19 @@ const roomEmit = (url, socket, data) => {
   }
 }
 
-// function handleExit(err) {
-//   if (err) {
-//     errors.report(err);
-//   }
-//   if (options.exit) {
-//     process.exit();
-//   }
-// }
+function handleExit(err) {
+  if (err) {
+    errors.report(err);
+  }
+  if (options.exit) {
+    process.exit();
+  }
+}
 
-// process.on("exit", handleExit.bind(null));
-// process.on("SIGINT", handleExit.bind(null));
-// process.on("SIGTERM", handleExit.bind(null));
-// process.on("uncaughtException", handleExit.bind(null));
+process.on("exit", handleExit.bind(null));
+process.on("SIGINT", handleExit.bind(null));
+process.on("SIGTERM", handleExit.bind(null));
+process.on("uncaughtException", handleExit.bind(null));
 
 
 io.on('connection', (socket) => {
@@ -75,17 +75,18 @@ io.on('connection', (socket) => {
   // when the client emits 'new message', this listens and executes
   socket.on('new message', (data) => {
     // we tell the client to execute 'new message'
-    if (url.includes("nothinghere")){
-      socket.to('nothinghere').emit('new message', {
-        username: socket.username,
-        message: data
-      });
-    }else{
-      socket.broadcast.emit('new message', {
-      username: socket.username,
-      message: data
-      });
-    }
+    //commented out because abstracted and turned into roomEmit
+    // if (url.includes("nothinghere")){
+    //   socket.to('nothinghere').emit('new message', {
+    //     username: socket.username,
+    //     message: data
+    //   });
+    // }else{
+    //   socket.broadcast.emit('new message', {
+    //   username: socket.username,
+    //   message: data
+    //   });
+    // }
     roomEmit(url,socket,data)
   });
 
