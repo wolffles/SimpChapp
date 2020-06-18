@@ -31,7 +31,7 @@ function createHash(input) {
     const susbscriptionId = createHash(JSON.stringify(subscriptionRequest));
     subscriptions[susbscriptionId] = subscriptionRequest;
     console.log("these are the subscriptions",subscriptions)
-    res.status(201).json({ id: susbscriptionId });
+    res.status(201).json({ id: susbscriptionId});
   }
 
 

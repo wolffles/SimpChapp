@@ -26,9 +26,9 @@ function sendSubscriptionToPushServer(subscription) {
  */
 function sendNotification(id) {
     if(id){
-      http.get(`/subscription/${id}`)
+      http.get(`subscription/${id}`)
     }else{
-      http.get(`/subscription/${subscriptionId}`);
+      http.get(`subscription/${subscriptionId}`);
     }
 }  
 

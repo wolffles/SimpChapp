@@ -7,7 +7,7 @@ var io = require('socket.io')(server);
 const subscriptionHandler = require('./backend/subscriptionHandler');
 
 const port = process.env.PORT || 3000;
-const host = process.env.HOSTNAME || "https://localhost/";
+// const host = process.env.HOSTNAME || "https://localhost/";
 
 
 
