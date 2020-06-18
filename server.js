@@ -1,9 +1,9 @@
 // Setup basic express server
-var express = require('express');
-var app = express();
-var path = require('path');
-var server = require('http').createServer(app);
-var io = require('socket.io')(server);
+const express = require('express');
+const app = express();
+const path = require('path');
+const server = require('http').createServer(app);
+const io = require('socket.io')(server);
 const subscriptionHandler = require('./backend/subscriptionHandler');
 
 const port = process.env.PORT || 3000;
