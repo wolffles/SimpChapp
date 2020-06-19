@@ -6,7 +6,7 @@ const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const subscriptionHandler = require('./backend/subscriptionHandler');
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 // const host = process.env.HOSTNAME || "https://localhost/";
 
 server.listen(port, () => {
@@ -48,19 +48,19 @@ const roomEmit = (url, socket, data) => {
   }
 }
 
-function handleExit(err) {
-  if (err) {
-    errors.report(err);
-  }
-  if (options.exit) {
-    process.exit();
-  }
-}
+// function handleExit(err) {
+//   if (err) {
+//     errors.report(err);
+//   }
+//   if (options.exit) {
+//     process.exit();
+//   }
+// }
 
-process.on("exit", handleExit.bind(null));
-process.on("SIGINT", handleExit.bind(null));
-process.on("SIGTERM", handleExit.bind(null));
-process.on("uncaughtException", handleExit.bind(null));
+// process.on("exit", handleExit.bind(null));
+// process.on("SIGINT", handleExit.bind(null));
+// process.on("SIGTERM", handleExit.bind(null));
+// process.on("uncaughtException", handleExit.bind(null));
 
 
 io.on('connection', (socket) => {
