@@ -21,6 +21,7 @@ app.use(express.static(path.join(__dirname, 'public'),{
   extensions: ['html']
 }));
 
+
 app.post("/swsubscription", subscriptionHandler.handlePushNotificationSubscription);
 app.get("/subscription/allothers/:id", subscriptionHandler.sendAllOthersPushNotification);
 app.get("/subscription/:id", subscriptionHandler.sendPushNotification);
