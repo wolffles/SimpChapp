@@ -161,7 +161,7 @@ io.on('connection', (socket) => {
         --otherUsers;
         socket.to('nothinghere').emit('user left', {
           username:socket.username,
-          numUsers: otherusers
+          numUsers: otherUsers
         })
       }else{
         --normalUsers;
