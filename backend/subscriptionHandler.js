@@ -44,6 +44,35 @@ function createHash(input) {
 //     res.status201.json({id: subscriptionId});
 // }
 
+function sendAllOthersPushNotification(req, res) {
+    console.log("this is the req.params", req.params)
+    const subscriptionId = req.params.id;
+    console.log("subscriptions",subscriptions)
+    let keys = Object.keys(subscriptions)
+    console.log(keys)
+    let idx = keys.indexOf(subscriptionId);
+    keys.splice(idx,1);
+    console.log(keys)
+    for(let i = 0; i < keys.length; ++i){
+        let pushSubscription = subscriptions[keys[i]];
+        // console.log(pushSubscription)
+        webpush.sendNotification(
+            pushSubscription,
+            JSON.stringify({
+                title: "New message",
+                text: "Someone messaged you",
+                image: "",
+                tag: "new message",
+                url: "/"
+            })
+        )
+        .catch(err => {
+            console.log("you've received an error:", err);
+        });
+        res.status(202).json({msg:'the message should have been sent'});
+    }
+}
+
 function sendPushNotification(req, res) {
     const subscriptionId = req.params.id;
     const pushSubscription = subscriptions[subscriptionId];
@@ -64,4 +93,4 @@ function sendPushNotification(req, res) {
     res.status(202).json({msg:'the message should have been sent'});
 }
 
-module.exports = { handlePushNotificationSubscription, sendPushNotification };
+module.exports = { handlePushNotificationSubscription, sendAllOthersPushNotification ,sendPushNotification };
