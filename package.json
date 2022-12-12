@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/wolffles/SimpChapp#readme",
   "dependencies": {
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "heroku": "^7.41.1",
     "socket.io": "^2.3.0",
     "web-push": "^3.4.4"
