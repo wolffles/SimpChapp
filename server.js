@@ -4,7 +4,6 @@ const app = express();
 const path = require('path');
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
-const subscriptionHandler = require('./backend/subscriptionHandler');
 
 const port = process.env.PORT || 5050;
 // const host = process.env.HOSTNAME || "https://localhost/";
@@ -17,14 +16,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routing
-app.use(express.static(path.join(__dirname, 'public'),{
+app.use(express.static(path.join(__dirname, 'SimplyChat'),{
   extensions: ['html']
 }));
 
 
-app.post("/swsubscription", subscriptionHandler.handlePushNotificationSubscription);
-app.get("/subscription/allothers/:id", subscriptionHandler.sendAllOthersPushNotification);
-app.get("/subscription/:id", subscriptionHandler.sendPushNotification);
+//app.post("/swsubscription", subscriptionHandler.handlePushNotificationSubscription);
+//app.get("/subscription/allothers/:id", subscriptionHandler.sendAllOthersPushNotification);
+//app.get("/subscription/:id", subscriptionHandler.sendPushNotification);
 
 
 // Chatroom
