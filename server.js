@@ -6,7 +6,7 @@ const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const subscriptionHandler = require('./backend/subscriptionHandler');
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5050;
 // const host = process.env.HOSTNAME || "https://localhost/";
 
 server.listen(port, () => {

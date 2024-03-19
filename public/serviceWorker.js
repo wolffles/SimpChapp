@@ -1,3 +1,5 @@
+// tried to make a push notification probably not going to use this
+
 function receivePushNotification(event) {
   console.log("[Service Worker] Push Received.");
 

@@ -1,3 +1,5 @@
+//repurpose me
+
 import { registerSW, subscribeSW, pushCommand } from './push-index.js'
 document.addEventListener('DOMContentLoaded', function(){
 
