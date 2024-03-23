@@ -1,3 +1,5 @@
+const {userConnectedToRoom} = require( './backend/serverChatRoomFunctions')
+const {broadcastToRoom} = require('./backend/broadcastFunctions')
 // Setup basic express server
 const express = require('express');
 const app = express();
@@ -32,19 +34,23 @@ var otherUsers = 0;
 
 
 // when this app sends a message it sends it to every room, need to change that
-const roomEmit = (url, socket, data) => {
+const roomEmit = (socket, data) => {
   // we tell the client to execute 'new message'
-  if (url.includes("nothinghere")){
-    socket.to('nothinghere').emit('new message', {
-      username: socket.username,
-      message: data
-    });
-  }else{
-    socket.to('normal').emit('new message', {
-    username: socket.username,
-    message: data
-    });
-  }
+    console.log('this is data', data, 'socket', socket)
+    socket.to(socket.roomName).emit('message', {
+    username: data.username,
+    message: data.message
+    })
+}
+
+/**
+ * broad cast to all in room exluding sender
+ * @param {Socket} socket 
+ * @param {String} listenString 
+ * @param {Object} dataObj 
+ */
+const broadcastRoomExcludeSender = (socket, roomName, listenString, dataObj ) => {
+  socket.to(roomName).emit(listenString, dataObj)
 }
 
 // function handleExit(err) {
@@ -61,63 +67,51 @@ const roomEmit = (url, socket, data) => {
 // process.on("SIGTERM", handleExit.bind(null));
 // process.on("uncaughtException", handleExit.bind(null));
 
+let rooms = {
+  global :{
+    roomID: '',
+    roomName: '',
+    numUsers: 0,
+    connectedUsersList: [],
+    broadcast: false,
+    toBroadcast: {
+        userJoined:"",
+        userLeft: "",
+        userRemoved: "",
+        numUsers: ""
+      }
+  }
+}
 
 io.on('connection', (socket) => {
   let url = socket.request.headers.referer
-  if (url.includes("nothinghere")){
-    console.log("joined nothinghere")
-    socket.join('nothinghere')
-  }else {
-    // console.log('joined normal')
-    socket.join('normal')
-  }
   var addedUser = false;
 
+  // socket.on('user message', (data) => {
+  //   broadcastRoomExcludeSender(socket, roomName, 'message', data);
+  // });
+
   // when the client emits 'new message', this listens and executes
-  socket.on('new message', (data) => {
-    // we tell the client to execute 'new message'
-    //commented out because abstracted and turned into roomEmit
-    // if (url.includes("nothinghere")){
-    //   socket.to('nothinghere').emit('new message', {
-    //     username: socket.username,
-    //     message: data
-    //   });
-    // }else{
-    //   socket.broadcast.emit('new message', {
-    //   username: socket.username,
-    //   message: data
-    //   });
-    // }
-    roomEmit(url,socket,data)
+  socket.on('user message', (data) => {
+    roomEmit(socket, data)
   });
 
   // when the client emits 'add user', this listens and executes
-  socket.on('add user', (username) => {
+  socket.on('add user', (data) => {
     if (addedUser) return;
-    socket.username = username
+    roomName = data?.roomName ?? 'global';
+
+    // what is socket.roomName
+    socket.roomName = roomName
+
+    socket.join(roomName);
     addedUser = true;
-    // we store the username in the socket session for this client
-    // echo globally (all clients) that a person has connected
-    if (url.includes("nothinghere")){
-      ++otherUsers
-      socket.emit('login', {
-        numUsers: otherUsers
-      })
-      socket.to('nothinghere').emit('user joined', {
-        username: socket.username,
-        numUsers: otherUsers
-      })
-    }else{
-      ++normalUsers
-      socket.emit('login', {
-        numUsers: normalUsers
-      });
-      socket.to('normal').emit('user joined', {
-        username: socket.username,
-        numUsers: normalUsers
-      });
-    }
-  });
+    userConnectedToRoom(rooms[roomName], socket.username)
+    // console.log(util.inspect(rooms[roomName], false, null, true))
+    // don't know if I need this now
+    // socket.emit('update user state', rooms[roomName].savedPlayers[socket.username])
+    broadcastToRoom(io,roomName,'update room state', rooms[roomName]);
+});
 
   // when the client emits 'typing', we broadcast it to others
   socket.on('typing', () => {
@@ -126,7 +120,7 @@ io.on('connection', (socket) => {
         username:socket.username,
       })
     }else{
-      socket.to('normal').emit('typing', {
+      socket.to('global').emit('typing', {
         username: socket.username,
       });
     }
@@ -142,7 +136,7 @@ io.on('connection', (socket) => {
         username:socket.username,
       })
     }else{
-      socket.to('normal').emit('stop typing', {
+      socket.to('global').emit('stop typing', {
         username: socket.username,
       });
     }
@@ -164,7 +158,7 @@ io.on('connection', (socket) => {
         })
       }else{
         --normalUsers;
-        socket.to('normal').emit('user left', {
+        socket.to('global').emit('user left', {
           username: socket.username,
           numUsers: normalUsers
         });
