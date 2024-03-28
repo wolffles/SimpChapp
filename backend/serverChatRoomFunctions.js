@@ -67,17 +67,18 @@ const getUsernameColor = (username) => {
         room.connectedUsersList.push(username);
         clearToBroadcast(room)
         room.broadcast = true
-        room.toBroadcast.userJoined = [`New player, ${username} joined `, undefined]
+        room.toBroadcast.userJoined = [`New user, ${username} joined `, undefined]
         room.toBroadcast.numUsers = [`There's ${room.connectedUsersList.length} participants`, undefined]
         return room
     }
+
  const userDisconnected = (room, username) => {
         let idx = room.connectedUsersList.indexOf(username);
-        room.connectedUsersList.splice(idx,1);
+        room.connectedUsersList.splice(idx, 1);
         clearToBroadcast(room)
         room.broadcast = true
         room.toBroadcast.userLeft = [username + " left the room"]
-        room.toBroadcast.numUsers = [`There's ${room.connectedUsersList.length} participants`, undefined]
+        room.toBroadcast.numUsers = [`There's ${room.connectedUsersList.length} participants`]
     }
 
  const removeUser = (room, username) => {
@@ -86,7 +87,7 @@ const getUsernameColor = (username) => {
         room.savedPlayersList.splice(idx,1);
         clearToBroadcast(room);
         room.broadcast = true
-        room.toBroadcast.userRemoved = [`${username}'s player area was removed.`, undefined]
+        room.toBroadcast.userRemoved = [`${username}'s player area was removed.`]
 
     }
  const deleteRoom = (rooms, roomName) => {

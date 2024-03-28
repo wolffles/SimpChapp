@@ -92,9 +92,15 @@
   .messages {
     font-size: 150%;
   }
+
+  .inputMessage:focus {
+    outline: none;
+  }
   
   .inputMessage {
     font-size: 100%;
+    width: 100%;
+    border: none;
   }
   
   .log {
@@ -131,7 +137,7 @@
   
   /* Input */
   
-  .inputMessage {
+  .messageInput {
     border: 10px solid #000;
     bottom: 0;
     height: 60px;
@@ -141,6 +147,9 @@
     position: absolute;
     right: 0;
     width: 100%;
+    height: auto;
+    max-height: 500px;
+    overflow-y:auto;
   }
 
   #bellbtn {

@@ -1,25 +1,44 @@
 import React from "react";
 import {getUsernameColor, isLink} from '../utility/clientChatRoom'
 
+
 export default function MessageList({ messages} ) {
   let messageList;
 
   if (messages){
     messageList = messages.map((message, i) =>{
-      if(isLink(message[0])){
-        return <li className="playerMessage"key={i}>
-          <span className="spanMessage" style={{color:getUsernameColor(message[1])}}>{message[1]}</span>: <a target="_blank"  rel='noopener noreferrer' href={message[0]}>{message[0]}</a>
-          </li>;
-      }else if (message[1]){
-        return <li className="playerMessage"key={i}>
-        <span className="spanMessage" style={{color:getUsernameColor(message[1])}}>{message[1]}</span>: {message[0]}
-        </li>;
+      //handle image input
+      let imgObj = null
+      let linkObj = null
+      let textObj = null
+      let userObj = null
+    //user message
+      if (message[1]){
+        userObj = <><span className="spanMessage" key={i} style={{color:getUsernameColor(message[1])}}>{message[1]}</span>:</>
+        // if image
+        if(message[2]){
+          imgObj = <img src={message[2]} key={i} alt="Preview" style={{ maxWidth: '100px' }} />
+        }
+        // handle links
+        if(isLink(message[0])){
+          linkObj =<a target="_blank"  rel='noopener noreferrer' href={message[0]}>{message[0]}</a>
+        }else {
+          // normal text message
+          textObj =<>{message[0]}</>
+        }
+        //server message
       }else {
-       return <li className="playerMessage"key={i}>
-          <div className="serverMessage">{message[0]}</div>
-        </li>;
+          textObj = <><div className="serverMessage" key={i}>{message[0]}</div></>
       }
-      });
+      return (
+        <li className="playerMessage" key={i}>
+          {userObj && userObj}
+          {imgObj && imgObj}
+          {linkObj && linkObj}
+          {textObj && textObj}
+        </li>
+      )
+    });
 
 
   }

@@ -37,9 +37,9 @@ const broadcastRoomExcludeSender = (socket, roomName, listenString, dataObj ) =>
  * @param {*} io 
  * @param {*} roomName 
  * @param {*} listenString 
- * @param {*} dataObj 
+ * @param {*} roomObj 
  */
-const broadcastToRoom = (io, roomName, listenString, dataObj) => { 
-      io.in(roomName).emit(listenString, dataObj);}
+const broadcastToRoom = (io, roomName, listenString, roomObj) => { 
+      io.in(roomName).emit(listenString, roomObj);}
 
 module.exports = { clearToBroadcast, emitDataToClient, broadcastRoomExcludeSender, broadcastToRoom };

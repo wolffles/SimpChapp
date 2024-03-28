@@ -1,4 +1,4 @@
-const {userConnectedToRoom} = require( './backend/serverChatRoomFunctions')
+const {userConnectedToRoom, userDisconnected} = require( './backend/serverChatRoomFunctions')
 const {broadcastToRoom} = require('./backend/broadcastFunctions')
 // Setup basic express server
 const express = require('express');
@@ -36,10 +36,10 @@ var otherUsers = 0;
 // when this app sends a message it sends it to every room, need to change that
 const roomEmit = (socket, data) => {
   // we tell the client to execute 'new message'
-    console.log('this is data', data, 'socket', socket)
     socket.to(socket.roomName).emit('message', {
     username: data.username,
-    message: data.message
+    message: data.message,
+    image: data.image
     })
 }
 
@@ -87,6 +87,26 @@ io.on('connection', (socket) => {
   let url = socket.request.headers.referer
   var addedUser = false;
 
+  // when the client emits 'add user', this listens and executes
+  socket.on('add user', (userData) => {
+
+    if (!userData.username) return;
+    roomName = userData.roomName ?? 'global';
+
+    // the socket holds the name of the room. otherwise it sometimes get lost on server updates. 
+    // needed for things like disconnecting logic
+    socket.roomName = roomName
+    socket.username = userData.username
+
+    socket.join(roomName);
+    addedUser = true;
+    rooms[roomName] = userConnectedToRoom(rooms[roomName], userData.username)
+    // console.log(util.inspect(rooms[roomName], false, null, true))
+    // Don't know if I need this now
+    // socket.emit('update user state', rooms[roomName].savedPlayers[socket.username])
+    broadcastToRoom(io,roomName,'update room state', rooms[roomName]);
+  });
+
   // socket.on('user message', (data) => {
   //   broadcastRoomExcludeSender(socket, roomName, 'message', data);
   // });
@@ -95,23 +115,6 @@ io.on('connection', (socket) => {
   socket.on('user message', (data) => {
     roomEmit(socket, data)
   });
-
-  // when the client emits 'add user', this listens and executes
-  socket.on('add user', (data) => {
-    if (addedUser) return;
-    roomName = data?.roomName ?? 'global';
-
-    // what is socket.roomName
-    socket.roomName = roomName
-
-    socket.join(roomName);
-    addedUser = true;
-    userConnectedToRoom(rooms[roomName], socket.username)
-    // console.log(util.inspect(rooms[roomName], false, null, true))
-    // don't know if I need this now
-    // socket.emit('update user state', rooms[roomName].savedPlayers[socket.username])
-    broadcastToRoom(io,roomName,'update room state', rooms[roomName]);
-});
 
   // when the client emits 'typing', we broadcast it to others
   socket.on('typing', () => {
@@ -143,26 +146,21 @@ io.on('connection', (socket) => {
   });
 
   // when the user disconnects.. perform this
+
   socket.on('disconnect', () => {
+    let roomName = socket.roomName
     if (addedUser) {
-      // echo globally that this client has left
-      // socket.broadcast.emit('user left', {
-      //   username: socket.username,
-      //   numUsers: numUsers
-      // });
-       if (url.includes("nothinghere")){
-        --otherUsers;
-        socket.to('nothinghere').emit('user left', {
-          username:socket.username,
-          numUsers: otherUsers
-        })
-      }else{
-        --normalUsers;
-        socket.to('global').emit('user left', {
-          username: socket.username,
-          numUsers: normalUsers
-        });
+        console.log('hit')
+        userDisconnected(rooms[roomName], socket.username)
+        // setTimeout(() => {
+        //     if(rooms[roomName] && rooms[roomName].connectedPlayersList.length == 0){
+        //         //deletes room after five minutes if no participant joined the room
+        //         console.log(roomName, ' is deleted')
+        //         deleteRoom(rooms, roomName)
+        //     }
+        // }, 300000)
+        // echo globally that this client has left
+        broadcastRoomExcludeSender(socket,roomName,'update room state', rooms[roomName])
       }
-    }
-  });
+    });
 });

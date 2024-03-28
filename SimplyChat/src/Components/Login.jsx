@@ -7,10 +7,13 @@ const Login = () => {
 
     const {user,setUser} = useContext(userContext);
 
+
     const createUser =(e)=>{
         e.preventDefault();
-        setUser({username:username, roomName:''});
-        socket.emit('add user', user);
+        let tempUser = {username:username, roomName:undefined}
+        // because react states are async we will have to set a temp user object
+        setUser(tempUser);
+        socket.emit('add user', tempUser);
     }
 
   return (
