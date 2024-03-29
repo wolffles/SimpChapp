@@ -8,8 +8,14 @@ primary_region = 'dfw'
 
 [build]
 
-[http_service]
-  internal_port = 3000
+[http_services]
+  [[http_services.services]]
+    internal_port = 5050
+    protocol = "http"
+
+  [[http_services.services]]
+    internal_port = 5051
+    protocol = "http"
   force_https = true
   auto_stop_machines = true
   auto_start_machines = true
