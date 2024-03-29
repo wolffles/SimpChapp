@@ -1,6 +1,6 @@
 import React, { useEffect, useContext, useState } from 'react'
 import userContext from '../context/UserContext'
-import {sendMessage, socket, updatePlayerInfo} from '../utility/socket.js';
+import {sendMessage, socket} from '../utility/socket.js';
 import MessageList from './MessageList.jsx'
 import {cleanInput} from '../utility/clientChatRoom.js'
 
@@ -18,7 +18,6 @@ const Chatroom = () => {
     
     updatedState = localMessageList.concat([[message, username, image]]) 
     //you could save messages at this point if you send it to the back end
-    console.log(localMessageList)
     setLocalMessageList(updatedState);   
     //don't know if I need this
     // updatePlayerInfo({messages:updatedState, username:userInfo.username, action:'chat'})

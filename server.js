@@ -1,31 +1,39 @@
 const {userConnectedToRoom, userDisconnected} = require( './backend/serverChatRoomFunctions')
 const {broadcastToRoom} = require('./backend/broadcastFunctions')
+const { ExpressPeerServer } = require("peer");
 // Setup basic express server
 const express = require('express');
 const app = express();
-const path = require('path');
-const server = require('http').createServer(app);
-const io = require('socket.io')(server);
+// const path = require('path');
+const ioPort = process.env.PORT || 5050;
+const peerPort = process.env.PORT || 5051
+const ioListen = app.listen(ioPort, () => {console.log('app listening for io at port %d', ioPort);})
+const peerListen = app.listen(peerPort, () => {console.log('app listening for peer at port %d', peerPort);})
+const io = require('socket.io')(ioListen);
 
-const port = process.env.PORT || 5050;
+const peerServer = ExpressPeerServer(peerListen, {
+  debug:true,
+	path: "/peerConnect",
+});
+
+app.get("/", (req, res, next) => res.send("Hello world!"));
 // const host = process.env.HOSTNAME || "https://localhost/";
 
-server.listen(port, () => {
-  console.log('Server listening at port %d', port);
-});
+// server.listen(ioPort, () => {
+//   console.log('Server listening at port %d', ioPort);
+// });
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routing
-app.use(express.static(path.join(__dirname, 'SimplyChat'),{
-  extensions: ['html']
-}));
+// app.use(express.static(path.join(__dirname, 'SimplyChat'),{
+//   extensions: ['html']
+// }));
 
+//localhost:5051/peerjs/peerConnect
+app.use('/peerjs',peerServer )
 
-//app.post("/swsubscription", subscriptionHandler.handlePushNotificationSubscription);
-//app.get("/subscription/allothers/:id", subscriptionHandler.sendAllOthersPushNotification);
-//app.get("/subscription/:id", subscriptionHandler.sendPushNotification);
 
 
 // Chatroom
@@ -67,6 +75,17 @@ const broadcastRoomExcludeSender = (socket, roomName, listenString, dataObj ) =>
 // process.on("SIGTERM", handleExit.bind(null));
 // process.on("uncaughtException", handleExit.bind(null));
 
+
+// peerJS stuff
+peerServer.on('connection', (client) => { 
+  console.log('client connected', client.getId()) 
+});
+
+peerServer.on('disconnect', (client) => { 
+  console.log("client disconnected", client.getId())
+ });
+
+// Websocket stuff
 let rooms = {
   global :{
     roomID: '',
@@ -150,7 +169,6 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     let roomName = socket.roomName
     if (addedUser) {
-        console.log('hit')
         userDisconnected(rooms[roomName], socket.username)
         // setTimeout(() => {
         //     if(rooms[roomName] && rooms[roomName].connectedPlayersList.length == 0){
