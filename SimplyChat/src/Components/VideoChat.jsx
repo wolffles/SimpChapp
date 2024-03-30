@@ -154,22 +154,25 @@ const VideoChat = () => {
 
     return (
         <div className={`videoContainer ${user ? "" : "hidden"}`}>
-            <h1>PeerJS Video Chat</h1>
-            <h3>Your call id is: {callId}</h3>
+            <h1 className="title">Video Chat</h1>
+            <h3 className="subtitle">Your call id is: {callId}</h3>
             <div>
                 {/* User's video */}
                 <video style={{width:'25%', height:'auto'}} ref={localVideoRef} autoPlay muted playsInline />
                 {/* callers video */}
                 <video ref={remoteVideoRef} autoPlay playsInline />
             </div>
-            <input
-                type="text"
-                placeholder="Enter peer ID"
-                value={remotePeerId}
-                onChange={(e) => setRemotePeerId(e.target.value)}
-            />
-            <button onClick={handleCall}>Call</button>
-            <button onClick={endCall}>End</button>
+            <div className="inputForm">
+                <input
+                    className="callInput"
+                    type="text"
+                    placeholder="Enter Call ID"
+                    value={remotePeerId}
+                    onChange={(e) => setRemotePeerId(e.target.value)}
+                />
+                <button className="button1" onClick={handleCall}>Call</button>
+                <button className="button1" onClick={endCall}>End</button>
+            </div>
         </div>
     );
 };

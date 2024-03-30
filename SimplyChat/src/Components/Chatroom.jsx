@@ -84,10 +84,10 @@ const Chatroom = () => {
         <div id="messages" className="messages">
           <MessageList messages={localMessageList} />   
         </div>
-        <div className="messageInput">
+        <div className="messageBox">
           {/* the image && will not display if image is null */}
           {image && <img src={image} alt="Preview" style={{ maxWidth: '100px' }} />}
-          <form onSubmit={submitMessage} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) {submitMessage(e)}}}>
+          <form className="inputForm"onSubmit={submitMessage} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) {submitMessage(e)}}}>
               {/* File input for selecting image */}
               <input id='imgTag' type="file" onChange={handleImageChange} accept="image/*" />
               <textarea className="inputMessage"

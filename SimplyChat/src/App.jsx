@@ -10,12 +10,12 @@ import VideoChat from './Components/VideoChat'
 const App = () => {
   return (
     <Router>
-      <ControlBoard />
         <UserContextProvider>
           <Routes>
             <Route path='/' element={
               <>
                 <Login/>
+                <ControlBoard />
                 <div className='pages'>
                   <Chatroom/>
                   <VideoChat/>
