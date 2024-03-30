@@ -1,19 +1,22 @@
 # SimpChapp
 
-Simple Chat 
+Simple Chat APP
+A place to chat, send pictures, and video call.
 
-uses basic html for frontend
 
-node for backend
 
-thats all I know
+Node, express, socketIO, PeerJS, Vite, React
+in production it serves static files created using "npm run build"
+to deploy to fly.io flyctl deploy
 
+for dev/local "npm run dev" runs concurrently and nodemon to hot reload.
 
 #TODO
-* switch to react front end?
-* fix up UI
-* add ability to upload photos
-* add private rooms
-* add a random chat feature. 
+* clean up code
+* fix the tab title says vite+react
+* controlboard
+* chat room video styling.
+* think about how to make money off this.
+
 
 

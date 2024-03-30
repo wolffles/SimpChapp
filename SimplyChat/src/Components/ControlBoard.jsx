@@ -4,11 +4,10 @@ import  {Link} from 'react-router-dom'
 const ControlBoard = () => {
 
     return (
-        <>
-            <h1> hello</h1>
+        <div className='controlBoard'>
             <Link to="/">Home</Link>
             <Link to="videochat">Video</Link>     
-        </>
+        </div>
     )
 }
 

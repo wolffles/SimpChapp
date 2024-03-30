@@ -79,28 +79,26 @@ const Chatroom = () => {
   });
 
   return (
-    <div className="pages">
-    <div className={`chat page ${user ? "" : "hidden"}`}>
+    <div className={`chat ${user ? "" : "hidden"}`}>
       <div className="chatArea">
         <div id="messages" className="messages">
-            <MessageList messages={localMessageList} />   
+          <MessageList messages={localMessageList} />   
+        </div>
+        <div className="messageInput">
+          {/* the image && will not display if image is null */}
+          {image && <img src={image} alt="Preview" style={{ maxWidth: '100px' }} />}
+          <form onSubmit={submitMessage} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) {submitMessage(e)}}}>
+              {/* File input for selecting image */}
+              <input id='imgTag' type="file" onChange={handleImageChange} accept="image/*" />
+              <textarea className="inputMessage"
+                placeholder="Type here..."
+                value={message}
+                onChange={(e) => {setMessage(e.target.value)}}
+              />
+          </form>
         </div>
       </div>
-      <div className="messageInput">
-        {/* the image && will not display if image is null */}
-        {image && <img src={image} alt="Preview" style={{ maxWidth: '100px' }} />}
-        <form onSubmit={submitMessage} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) {submitMessage(e)}}}>
-            {/* File input for selecting image */}
-            <input id='imgTag' type="file" onChange={handleImageChange} accept="image/*" />
-            <textarea className="inputMessage"
-              placeholder="Type here..."
-              value={message}
-              onChange={(e) => {setMessage(e.target.value)}}
-            />
-        </form>
-      </div>
     </div>
-  </div>
   )
 }
 

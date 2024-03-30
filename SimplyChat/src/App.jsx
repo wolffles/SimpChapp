@@ -16,7 +16,10 @@ const App = () => {
             <Route path='/' element={
               <>
                 <Login/>
-                <Chatroom/>
+                <div className='pages'>
+                  <Chatroom/>
+                  <VideoChat/>
+                </div>
               </>
             } />
             {/* <Route path='chatroom' element={<Chatroom/>}/> */}

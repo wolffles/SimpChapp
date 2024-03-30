@@ -1,12 +1,13 @@
 import { Peer } from "peerjs";
 import React, {useEffect, useState, useContext, useRef} from 'react'
 import { useNavigate } from 'react-router-dom';
-import userContext from '../context/UserContext'
+import {hostname} from '../utility/socket'
+import userContext from "../context/UserContext";
 
 
 const VideoChat = () => {
     const navigateTo = useNavigate();
-    // const {user} = useContext(userContext);
+    const {user} = useContext(userContext);
     const [callId, setCallId] = useState('')
     const [remotePeerId, setRemotePeerId] = useState('')
     const [peer, setPeer] = useState(null);
@@ -23,7 +24,7 @@ const VideoChat = () => {
             //saving this for when we can figure it out
             // const newPeer = new Peer(user.username,{
             const newPeer = new Peer({
-                host: "localhost",
+                host: hostname,
                 port: 5051,
                 path: "/peerjs/peerConnect",
                 debug: 0,
@@ -152,23 +153,23 @@ const VideoChat = () => {
     }, []);
 
     return (
-        <div>
-        <h1>PeerJS Video Chat</h1>
-        <h3>Your call id is: {callId}</h3>
-        <div>
-            {/* User's video */}
-            <video style={{width:'25%', height:'auto'}} ref={localVideoRef} autoPlay muted playsInline />
-            {/* callers video */}
-            <video ref={remoteVideoRef} autoPlay playsInline />
-        </div>
-        <input
-            type="text"
-            placeholder="Enter peer ID"
-            value={remotePeerId}
-            onChange={(e) => setRemotePeerId(e.target.value)}
-        />
-        <button onClick={handleCall}>Call</button>
-        <button onClick={endCall}>End</button>
+        <div className={`videoContainer ${user ? "" : "hidden"}`}>
+            <h1>PeerJS Video Chat</h1>
+            <h3>Your call id is: {callId}</h3>
+            <div>
+                {/* User's video */}
+                <video style={{width:'25%', height:'auto'}} ref={localVideoRef} autoPlay muted playsInline />
+                {/* callers video */}
+                <video ref={remoteVideoRef} autoPlay playsInline />
+            </div>
+            <input
+                type="text"
+                placeholder="Enter peer ID"
+                value={remotePeerId}
+                onChange={(e) => setRemotePeerId(e.target.value)}
+            />
+            <button onClick={handleCall}>Call</button>
+            <button onClick={endCall}>End</button>
         </div>
     );
 };

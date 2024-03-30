@@ -4,20 +4,32 @@ const { ExpressPeerServer } = require("peer");
 // Setup basic express server
 const express = require('express');
 const app = express();
-// const path = require('path');
+const path = require('path')
+console.log(process.env.PORT)
 const ioPort = process.env.PORT || 5050;
 const peerPort = process.env.PORT || 5051
+const htmlListen = app.listen(process.env.PORT || 3000)
 const ioListen = app.listen(ioPort, () => {console.log('app listening for io at port %d', ioPort);})
 const peerListen = app.listen(peerPort, () => {console.log('app listening for peer at port %d', peerPort);})
-const io = require('socket.io')(ioListen);
 
+const io = require('socket.io')(ioListen);
 const peerServer = ExpressPeerServer(peerListen, {
   debug:true,
 	path: "/peerConnect",
 });
 
-app.get("/", (req, res, next) => res.send("Hello world!"));
+if (!app.get('env') != "development"){
+  app.use(express.static(path.join(__dirname, '/SimplyChat/dist'),{
+    extensions: ['html']
+  }));
+
+  app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/SimplyChat/dist/index.html');
+  });
+}
 // const host = process.env.HOSTNAME || "https://localhost/";
+//serve the static files from this path
+
 
 // server.listen(ioPort, () => {
 //   console.log('Server listening at port %d', ioPort);
@@ -33,7 +45,6 @@ app.use(express.urlencoded({ extended: true }));
 
 //localhost:5051/peerjs/peerConnect
 app.use('/peerjs',peerServer )
-
 
 
 // Chatroom
