@@ -30,7 +30,6 @@ const Chatroom = () => {
     // TODO this doesn't actually clean the message *BUG*
     sendMessage({message:message, username:user.username, image: image});
     addMessage(message, user.username, image);
-    console.log(user)
     setMessage("")
     setImage(null)
     document.getElementById('imgTag').value = ''
@@ -81,12 +80,14 @@ const Chatroom = () => {
   return (
     <div className={`chat ${user ? "" : "hidden"}`}>
       <div className="chatArea">
-        <div id="messages" className="messages">
+        <div id="messages" className={"messages "+ (image ? "withpreview" : "")}>
           <MessageList messages={localMessageList} />   
         </div>
-        <div className="messageBox">
+        <div className={"inputMessageBox " + (image ? "withpreview" : "")}>
           {/* the image && will not display if image is null */}
-          {image && <img src={image} alt="Preview" style={{ maxWidth: '100px' }} />}
+          <div className='imgPreviewBox'>
+            {image && <img className="imgPreview" src={image} alt="Preview" style={{ maxWidth: '100px' }} />}
+          </div>
           <form className="inputForm"onSubmit={submitMessage} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) {submitMessage(e)}}}>
               {/* File input for selecting image */}
               <input id='imgTag' type="file" onChange={handleImageChange} accept="image/*" />

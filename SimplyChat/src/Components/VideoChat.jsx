@@ -32,15 +32,15 @@ const VideoChat = () => {
     
             // Listen for open event
             newPeer.on('open', (id) => {
-                console.log('My peer ID is: ' + id);
-                console.log(newPeer)
+                // console.log('My peer ID is: ' + id);
+                // console.log(newPeer)
                 setCallId(id)
             });
     
             // Listen for incoming call
             newPeer.on('call', (call) => {
                 // Answer the call
-                console.log(call)
+                // console.log(call)
                 navigator.mediaDevices
                 .getUserMedia({ video: true, audio: true })
                 .then((stream) => {
@@ -79,7 +79,7 @@ const VideoChat = () => {
                 setLocalStream(localVideoRef.current.srcObject)
             }
 
-            console.log(stream)
+            // console.log(stream)
 
             console.log('RemotepeerId',remotePeerId)
             // Call remote peer
@@ -87,7 +87,7 @@ const VideoChat = () => {
 
             // Listen for stream event
             call.on('stream', (remoteStream) => {
-                console.log(remoteStream)
+                // console.log(remoteStream)
             setRemoteStream(remoteStream);
             if (remoteVideoRef.current) {
                 remoteVideoRef.current.srcObject = remoteStream;
@@ -101,7 +101,7 @@ const VideoChat = () => {
     };
 
     const endCall = () => {
-        console.log(peer.connections)
+        // console.log(peer.connections)
         for (let conns in peer.connections) {
             peer.connections[conns].forEach((conn, index, array) => {
               console.log(`closing ${conn.connectionId} peerConnection (${index + 1}/${array.length})`, conn.peerConnection);
@@ -126,22 +126,18 @@ const VideoChat = () => {
         if ( remoteVideoRef.current.srcObject) {
             const stream = remoteVideoRef.current.srcObject;
             
-            console.log('stream tracks', stream.getTracks())
+            // console.log('stream tracks', stream.getTracks())
             // way to turn off media devices
             stream.getTracks().forEach((track) => {
               track.stop();
             });
             remoteVideoRef.current.srcObject = null;
-            console.log('2nd stream tracks', stream.getTracks())
+            // console.log('2nd stream tracks', stream.getTracks())
         }
     }
 
     useEffect(() => {
-        // if (!user) {
-        //     navigateTo('/');
-        // }else{
-            initializePeer()
-        // }
+        initializePeer()
 
         // Cleanup function
         return () => {

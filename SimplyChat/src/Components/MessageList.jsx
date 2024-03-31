@@ -8,7 +8,6 @@ export default function MessageList({ messages} ) {
   let messageList;
 
   if (messages){
-    console.log(messages)
     messageList = messages.map((message, i) =>{
       //handle image input
       let imgObj = null
@@ -18,8 +17,8 @@ export default function MessageList({ messages} ) {
       let messageSRC = null
     //user message
       if (message[1]){
-        userObj = <><span className="usernameText" key={i} style={{color:getUsernameColor(message[1])}}>{message[1]+": "}</span></>
         messageSRC = message[1] == user.username ? "userMessage" : "otherUserMessage"
+        userObj = <div className={"usernameText"} key={i} style={{color:getUsernameColor(message[1])}}>{message[1]}</div>
         // if image
         if(message[2]){
           imgObj = <img src={message[2]} key={i} alt="Preview" style={{ maxWidth: '100px' }} />
@@ -36,14 +35,27 @@ export default function MessageList({ messages} ) {
           textObj = <><div key={i}>{message[0]}</div></>
           messageSRC = "serverMessage"
       }
-      return (
-        <li className={"messageItem" + " " + (messageSRC)} key={i}>
-          {userObj && userObj}
-          {imgObj && imgObj}
-          {linkObj && linkObj}
-          {textObj && textObj}
-        </li>
-      )
+      
+        if (userObj){
+          return ( 
+            <div className={"messageBox"+ " " + (messageSRC)} key={i}>
+              <li className={"messageItem" + " " + (messageSRC)} >
+                {userObj && userObj}
+                {imgObj && imgObj}
+                {linkObj && linkObj}
+                {textObj && textObj}
+              </li>
+            </div>
+          )
+        }else {
+          return (
+            <li className={"messageItem" + " " + (messageSRC)} key={i}>
+              {imgObj && imgObj}
+              {linkObj && linkObj}
+              {textObj && textObj}
+            </li>
+          )
+        }
     });
 
 

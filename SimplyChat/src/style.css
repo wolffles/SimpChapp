@@ -126,7 +126,11 @@
     height: 89%;
     overflow-y: scroll;
     padding: 10px 20px 10px 20px;
-    font-size: 150%;
+    font-size: 100%;
+  }
+
+  .messages.withpreview{
+    height:78%;
   }
 
   .messageList {
@@ -137,36 +141,53 @@
     color: #fff;
   }
 
+  .messageBox {
+   width:100%;
+   background-color: transparent;
+   display:flex;
+  }
+
+  .messageBox.otherUserMessage{
+    flex-direction: row-reverse;
+
+  }
+  
+  .messageItem.userMessage, .messageItem.otherUserMessage{
+    margin-top: 4px;
+    border: 1px solid #000;
+    border-radius: 20px;
+    padding-bottom:7px;
+    background-color: aliceblue;
+  }
+
   .serverMessage {
     color:#fff;
     font-weight: bold;
     text-align: center;
   }
 
+  
+  .userMessage {
+    color:#000;
+    padding-left:15px;
+    padding-right:15px
+  }
+  
+  .otherUserMessage {
+    color:#000;
+    text-align:right;
+    padding-right:15px;
+    padding-left:15px;
+  }
+  
   .usernameText {
     font-weight:bold;
+    font-size:150%;
+    padding:0;
   }
-
-  .userMessage {
-    color:#fff;
-  }
-
-  .otherUserMessage {
-    color:#fff;
-    text-align:right;
-  }
-
-  
-  .username {
-    font-weight: 700;
-    overflow: hidden;
-    padding-right: 15px;
-    text-align: right;
-  }
-  
   /* Input */
   
-  .messageBox {
+  .inputMessageBox {
     border-top: 1px solid #000;
     bottom: 0;
     left: 0;
@@ -189,6 +210,12 @@
   .inputForm {
     width: 90%;
     margin:auto;
+  }
+
+  .imgPreviewBox{
+    width:90%;
+    margin:auto;
+    margin-top:5px;
   }
   
   .inputMessage::placeholder{
