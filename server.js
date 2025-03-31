@@ -190,7 +190,7 @@ io.on('connection', (socket) => {
         console.log(`Connection timeout for socket ${socket.id}`);
         socket.disconnect(true);
       }
-    }, 120000); // 2 minute timeout
+    }, 600000); // 10 minute timeout
   };
 
   /**

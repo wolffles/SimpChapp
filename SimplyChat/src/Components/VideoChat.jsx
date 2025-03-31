@@ -247,53 +247,106 @@ const VideoChat = () => {
         };
     }, []);
 
+    // Add these styles at the top of the file after the imports
+    const videoStyles = {
+        videoGrid: {
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: '16px',
+            padding: '16px',
+            height: '100%',
+            width: '100%',
+            backgroundColor: '#1a1a1a',
+            borderRadius: '8px',
+        },
+        videoContainer: {
+            position: 'relative',
+            width: '100%',
+            aspectRatio: '16/9',
+            backgroundColor: '#2a2a2a',
+            borderRadius: '8px',
+            overflow: 'hidden',
+        },
+        videoElement: {
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+        },
+        videoLabel: {
+            position: 'absolute',
+            bottom: '8px',
+            left: '8px',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            color: 'white',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '14px',
+        },
+    };
+
     return (
         <div className={`videoContainer ${user ? "" : "hidden"}`}>
-            <h1 className="title">Video Chat</h1>
-            {/* Display error messages */}
-            {error && <div className="error-message">{error}</div>}
-            {/* Display connection status */}
-            {isConnecting && <div className="connecting-message">Connecting to server...</div>}
-            <h3 className="subtitle">Your call id is: {callId}</h3>
-            {/* Video grid for local and remote streams */}
-            <div className="video-grid">
-                <video 
-                    style={{width:'25%', height:'auto'}} 
-                    ref={localVideoRef} 
-                    autoPlay 
-                    muted 
-                    playsInline 
-                />
-                <video 
-                    ref={remoteVideoRef} 
-                    autoPlay 
-                    playsInline 
-                />
+            <div className="video-toolbar">
+                <div className="toolbar-left" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%'
+                }}>
+                    <h1 className="toolbar-title" style={{paddingLeft: '20px'}}>Simply Chat</h1>
+                    <span className="call-id" style={{paddingRight: '20px'}}>ID: {callId}</span>
+                </div>
+                
+                <div className="toolbar-center">
+                    {error && <div className="error-message">{error}</div>}
+                    {isConnecting && <div className="connecting-message">Connecting to server...</div>}
+                </div>
+
+                <div className="toolbar-right">
+                    <input
+                        className="call-input"
+                        type="text"
+                        placeholder="Enter Call ID"
+                        value={remotePeerId}
+                        onChange={(e) => setRemotePeerId(e.target.value)}
+                        disabled={isInCall}
+                    />
+                    <button 
+                        className="toolbar-button call-button"
+                        onClick={handleCall}
+                        disabled={isInCall || isConnecting}
+                    >
+                        Call
+                    </button>
+                    <button 
+                        className="toolbar-button end-button"
+                        onClick={endCall}
+                        disabled={!isInCall}
+                    >
+                        End
+                    </button>
+                </div>
             </div>
-            {/* Call controls */}
-            <div className="inputForm">
-                <input
-                    className="callInput"
-                    type="text"
-                    placeholder="Enter Call ID"
-                    value={remotePeerId}
-                    onChange={(e) => setRemotePeerId(e.target.value)}
-                    disabled={isInCall}
-                />
-                <button 
-                    className="button1" 
-                    onClick={handleCall}
-                    disabled={isInCall || isConnecting}
-                >
-                    Call
-                </button>
-                <button 
-                    className="button1" 
-                    onClick={endCall}
-                    disabled={!isInCall}
-                >
-                    End
-                </button>
+            <div style={videoStyles.videoGrid}>
+                <div style={videoStyles.videoContainer}>
+                    <video 
+                        ref={localVideoRef} 
+                        autoPlay 
+                        muted 
+                        playsInline 
+                        style={videoStyles.videoElement}
+                    />
+                    <div style={videoStyles.videoLabel}>You</div>
+                </div>
+                <div style={videoStyles.videoContainer}>
+                    <video 
+                        ref={remoteVideoRef} 
+                        autoPlay 
+                        playsInline 
+                        style={videoStyles.videoElement}
+                    />
+                    <div style={videoStyles.videoLabel}>Remote User</div>
+                </div>
             </div>
         </div>
     );
