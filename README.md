@@ -1,9 +1,6 @@
 # SimpChapp
 
 Simple Chat APP
-A place to chat, send pictures, and video call.
-
-
 
 Node, express, socketIO, PeerJS, Vite, React
 in production it serves static files created using "npm run build"
