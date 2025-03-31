@@ -15,8 +15,12 @@ for dev/local "npm run dev" runs concurrently and nodemon to hot reload.
 * clean up code
 * fix the tab title says vite+react
 * controlboard
-* chat room video styling.
-* think about how to make money off this.
+    - add call incoming.
+    - add post call id to chatroom
+    - add more zoom like features
+    - add better messaging in chat instead of video section
+    - add ability to toggle views like in zoom.
+    - 
 
 
 
