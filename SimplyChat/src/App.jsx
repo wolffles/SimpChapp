@@ -15,7 +15,7 @@ const App = () => {
             <Route path='/' element={
               <>
                 <Login/>
-                <ControlBoard />
+                {/* <ControlBoard /> */}
                 <div className='pages'>
                   <Chatroom/>
                   <VideoChat/>

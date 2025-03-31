@@ -87,14 +87,64 @@ const broadcastRoomExcludeSender = (socket, roomName, listenString, dataObj ) =>
 // process.on("uncaughtException", handleExit.bind(null));
 
 
-// peerJS stuff
+/**
+ * Map to track all active peer connections
+ * Key: peer ID
+ * Value: Object containing connection metadata
+ */
+const activePeers = new Map();
+
+// peerJS connection handling
 peerServer.on('connection', (client) => { 
-  console.log('client connected', client.getId()) 
+  try {
+    console.log('client connected', client.getId());
+    // Store peer connection metadata including connection time and last activity
+    activePeers.set(client.getId(), {
+      id: client.getId(),
+      connectedAt: Date.now(),
+      lastActive: Date.now()
+    });
+  } catch (error) {
+    console.error('Error in peer connection:', error);
+    // Force disconnect the client if there's an error during connection
+    client.destroy();
+  }
 });
 
+// Handle peer disconnection
 peerServer.on('disconnect', (client) => { 
-  console.log("client disconnected", client.getId())
- });
+  try {
+    console.log("client disconnected", client.getId());
+    // Remove peer from active connections tracking
+    activePeers.delete(client.getId());
+  } catch (error) {
+    console.error('Error in peer disconnect:', error);
+  }
+});
+
+// Global error handler for peer server
+peerServer.on('error', (error) => {
+  console.error('Peer server error:', error);
+});
+
+/**
+ * Cleanup routine to remove inactive peers
+ * Runs every 5 minutes to check for and remove stale connections
+ */
+setInterval(() => {
+  const now = Date.now();
+  for (const [peerId, peerData] of activePeers.entries()) {
+    // Remove peers that haven't been active for 10 minutes (600000ms)
+    if (now - peerData.lastActive > 600000) {
+      console.log(`Removing inactive peer: ${peerId}`);
+      activePeers.delete(peerId);
+      const client = peerServer.getPeer(peerId);
+      if (client) {
+        client.destroy();
+      }
+    }
+  }
+}, 300000); // Check every 5 minutes (300000ms)
 
 // Websocket stuff
 let rooms = {
@@ -116,30 +166,72 @@ let rooms = {
 io.on('connection', (socket) => {
   let url = socket.request.headers.referer
   var addedUser = false;
+  // Variables to store interval and timeout IDs for cleanup
+  let heartbeatInterval;
+  let connectionTimeout;
 
-  // when the client emits 'add user', this listens and executes
-  socket.on('add user', (userData) => {
+  /**
+   * Sets up a heartbeat mechanism to keep track of active connections
+   * Sends a ping every 20 seconds to the client
+   */
+  const setupHeartbeat = () => {
+    heartbeatInterval = setInterval(() => {
+      socket.emit('ping');
+    }, 20000); // Send heartbeat every 20 seconds
+  };
 
-    if (!userData.username) return;
-    roomName = userData.roomName ?? 'global';
+  /**
+   * Sets up a connection timeout
+   * If no response is received within 2 minutes, the connection is terminated
+   */
+  const setupConnectionTimeout = () => {
+    connectionTimeout = setTimeout(() => {
+      if (socket.connected) {
+        console.log(`Connection timeout for socket ${socket.id}`);
+        socket.disconnect(true);
+      }
+    }, 120000); // 2 minute timeout
+  };
 
-    // the socket holds the name of the room. otherwise it sometimes get lost on server updates. 
-    // needed for things like disconnecting logic
-    socket.roomName = roomName
-    socket.username = userData.username
-
-    socket.join(roomName);
-    addedUser = true;
-    rooms[roomName] = userConnectedToRoom(rooms[roomName], userData.username)
-    // console.log(util.inspect(rooms[roomName], false, null, true))
-    // Don't know if I need this now
-    // socket.emit('update user state', rooms[roomName].savedPlayers[socket.username])
-    broadcastToRoom(io,roomName,'update room state', rooms[roomName]);
+  /**
+   * Handles pong responses from the client
+   * Resets the connection timeout when a pong is received
+   */
+  socket.on('pong', () => {
+    clearTimeout(connectionTimeout);
+    setupConnectionTimeout();
   });
 
-  // socket.on('user message', (data) => {
-  //   broadcastRoomExcludeSender(socket, roomName, 'message', data);
-  // });
+  // Handle new user connections
+  socket.on('add user', (userData) => {
+    try {
+      // Validate username and disconnect if invalid
+      if (!userData.username) {
+        socket.disconnect(true);
+        return;
+      }
+      
+      // Set up room and user data
+      roomName = userData.roomName ?? 'global';
+      socket.roomName = roomName;
+      socket.username = userData.username;
+
+      // Join room and update room state
+      socket.join(roomName);
+      addedUser = true;
+      rooms[roomName] = userConnectedToRoom(rooms[roomName], userData.username);
+      
+      // Initialize connection monitoring
+      setupHeartbeat();
+      setupConnectionTimeout();
+      
+      // Broadcast updated room state to all users
+      broadcastToRoom(io, roomName, 'update room state', rooms[roomName]);
+    } catch (error) {
+      console.error('Error in add user:', error);
+      socket.disconnect(true);
+    }
+  });
 
   // when the client emits 'new message', this listens and executes
   socket.on('user message', (data) => {
@@ -175,21 +267,45 @@ io.on('connection', (socket) => {
     }
   });
 
-  // when the user disconnects.. perform this
-
+  /**
+   * Handle socket disconnection
+   * Cleans up resources and updates room state
+   */
   socket.on('disconnect', () => {
     let roomName = socket.roomName
     if (addedUser) {
-        userDisconnected(rooms[roomName], socket.username)
-        // setTimeout(() => {
-        //     if(rooms[roomName] && rooms[roomName].connectedPlayersList.length == 0){
-        //         //deletes room after five minutes if no participant joined the room
-        //         console.log(roomName, ' is deleted')
-        //         deleteRoom(rooms, roomName)
-        //     }
-        // }, 300000)
-        // echo globally that this client has left
+      try {
+        // Clean up connection monitoring resources
+        clearInterval(heartbeatInterval);
+        clearTimeout(connectionTimeout);
+        
+        // Update room state
+        userDisconnected(rooms[roomName], socket.username);
+        
+        // Schedule cleanup of empty rooms
+        if (rooms[roomName] && rooms[roomName].connectedUsersList.length === 0) {
+          setTimeout(() => {
+            if (rooms[roomName] && rooms[roomName].connectedUsersList.length === 0) {
+              console.log(`Deleting empty room: ${roomName}`);
+              delete rooms[roomName];
+            }
+          }, 300000); // Wait 5 minutes before deleting empty room
+        }
+        
+        // Broadcast updated room state
         broadcastRoomExcludeSender(socket,roomName,'update room state', rooms[roomName])
+      } catch (error) {
+        console.error('Error in disconnect handler:', error);
       }
-    });
+    }
+  });
+
+  /**
+   * Global error handler for socket connections
+   * Disconnects the socket if an error occurs
+   */
+  socket.on('error', (error) => {
+    console.error('Socket error:', error);
+    socket.disconnect(true);
+  });
 });

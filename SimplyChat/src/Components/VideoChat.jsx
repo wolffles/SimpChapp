@@ -4,144 +4,243 @@ import { useNavigate } from 'react-router-dom';
 import {hostname} from '../utility/socket'
 import userContext from "../context/UserContext";
 
-
 const VideoChat = () => {
     const navigateTo = useNavigate();
     const {user} = useContext(userContext);
+    // State for managing the current user's call ID
     const [callId, setCallId] = useState('')
+    // State for storing the ID of the peer we want to call
     const [remotePeerId, setRemotePeerId] = useState('')
+    // State for storing the PeerJS instance
     const [peer, setPeer] = useState(null);
+    // State for storing the remote user's media stream
     const [remoteStream, setRemoteStream] = useState(null);
+    // State for storing the local user's media stream
     const [localStream, setLocalStream] = useState(null);
-    // User video ref
+    // State for displaying error messages to the user
+    const [error, setError] = useState(null);
+    // State to track if we're currently establishing a connection
+    const [isConnecting, setIsConnecting] = useState(false);
+    // State to track if we're currently in an active call
+    const [isInCall, setIsInCall] = useState(false);
+    
+    // Reference to the local video element
     const localVideoRef = useRef(null);
-    // Other's video ref
+    // Reference to the remote video element
     const remoteVideoRef = useRef(null);
+    // Reference to store the connection timeout ID for cleanup
+    const connectionTimeoutRef = useRef(null);
 
+    /**
+     * Initialize PeerJS connection with error handling and timeout
+     * Sets up the peer connection with proper error handling and connection timeout
+     * Also configures STUN server for NAT traversal
+     */
     const initializePeer = () => {
-        // Create a PeerJS instance\
-        if (!peer){
-            //saving this for when we can figure it out
-            // const newPeer = new Peer(user.username,{
+        if (!peer) {
+            setIsConnecting(true);
+            setError(null);
+
+            // Set a 10-second timeout for the connection attempt
+            connectionTimeoutRef.current = setTimeout(() => {
+                if (!peer) {
+                    setError('Connection timeout. Please try again.');
+                    setIsConnecting(false);
+                }
+            }, 10000);
+
+            // Create new PeerJS instance with configuration
             const newPeer = new Peer({
                 host: hostname,
                 port: 5051,
                 path: "/peerjs/peerConnect",
                 debug: 0,
+                // Configure STUN server for NAT traversal
+                config: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' }
+                    ]
+                }
             });
-    
-            // Listen for open event
+
+            // Handle successful connection
             newPeer.on('open', (id) => {
-                // console.log('My peer ID is: ' + id);
-                // console.log(newPeer)
-                setCallId(id)
+                clearTimeout(connectionTimeoutRef.current);
+                setCallId(id);
+                setIsConnecting(false);
             });
-    
-            // Listen for incoming call
-            newPeer.on('call', (call) => {
-                // Answer the call
-                // console.log(call)
-                navigator.mediaDevices
-                .getUserMedia({ video: true, audio: true })
-                .then((stream) => {
-                    call.answer(stream);
-                    // Display local video stream
-                    if (localVideoRef.current) {
-                        localVideoRef.current.srcObject = stream
-                        setLocalStream(localVideoRef.current.srcObject)
-                    }
-                    
-                    // Receive stream from caller
-                    call.on('stream', (remoteStream) => {
-                        setRemoteStream(remoteStream);
-                        if (remoteVideoRef.current) {
-                            remoteVideoRef.current.srcObject = remoteStream;
-                        }
-                    });
-                })
-                newPeer.on('close', endCall)
+
+            // Handle connection errors
+            newPeer.on('error', (err) => {
+                clearTimeout(connectionTimeoutRef.current);
+                setError(`Connection error: ${err.message}`);
+                setIsConnecting(false);
             });
-    
-            // Store the PeerJS instance in state
+
+            // Handle disconnection with automatic reconnection
+            newPeer.on('disconnected', () => {
+                setError('Disconnected from server. Attempting to reconnect...');
+                newPeer.reconnect();
+            });
+
+            // Handle permanent connection closure
+            newPeer.on('close', () => {
+                setError('Connection closed. Please refresh the page.');
+                setIsConnecting(false);
+            });
+
+            // Set up handler for incoming calls
+            newPeer.on('call', handleIncomingCall);
             setPeer(newPeer);
         }
     };
 
-    const handleCall = () => {
-        // Get user media
+    /**
+     * Handle incoming calls with proper error handling
+     * Manages the process of answering an incoming call
+     * Includes media device access and stream handling
+     */
+    const handleIncomingCall = async (call) => {
+        try {
+            setIsInCall(true);
+            // Request access to user's media devices
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: true, 
+                audio: true 
+            });
+            
+            // Answer the call with the local stream
+            call.answer(stream);
+            // Set up stream handling for the call
+            handleStream(stream, call);
+        } catch (err) {
+            setError('Failed to access media devices. Please check permissions.');
+            call.close();
+            setIsInCall(false);
+        }
+    };
 
-        navigator.mediaDevices
-        .getUserMedia({ video: true, audio: true })
-        .then((stream) => {
-            // Display local video stream
-            if (localVideoRef.current) {
-                localVideoRef.current.srcObject = stream
-                setLocalStream(localVideoRef.current.srcObject)
-            }
+    /**
+     * Handle media streams with error checking
+     * Manages both local and remote streams
+     * Sets up event handlers for stream events
+     */
+    const handleStream = (stream, call) => {
+        // Set up local video stream
+        if (localVideoRef.current) {
+            localVideoRef.current.srcObject = stream;
+            setLocalStream(stream);
+        }
 
-            // console.log(stream)
-
-            console.log('RemotepeerId',remotePeerId)
-            // Call remote peer
-            const call = peer.call(remotePeerId, localVideoRef.current.srcObject);
-
-            // Listen for stream event
-            call.on('stream', (remoteStream) => {
-                // console.log(remoteStream)
+        // Handle incoming remote stream
+        call.on('stream', (remoteStream) => {
             setRemoteStream(remoteStream);
             if (remoteVideoRef.current) {
                 remoteVideoRef.current.srcObject = remoteStream;
-                console.log('remoteVideoRef.current.srcObject', remoteVideoRef.current.srcObject)
             }
-            });
-        })
-        .catch((error) => {
-            console.error('Error accessing media devices:', error);
+        });
+
+        // Handle call closure
+        call.on('close', () => {
+            endCall();
+        });
+
+        // Handle call errors
+        call.on('error', (err) => {
+            setError(`Call error: ${err.message}`);
+            endCall();
         });
     };
 
+    /**
+     * Initiate outgoing call with validation
+     * Handles the process of making an outgoing call
+     * Includes input validation and media device access
+     */
+    const handleCall = async () => {
+        // Validate remote peer ID
+        if (!remotePeerId.trim()) {
+            setError('Please enter a valid call ID');
+            return;
+        }
+
+        // Check if peer connection is established
+        if (!peer) {
+            setError('Not connected to server. Please wait or refresh.');
+            return;
+        }
+
+        try {
+            setIsInCall(true);
+            // Request access to user's media devices
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: true, 
+                audio: true 
+            });
+
+            // Set up local video stream
+            if (localVideoRef.current) {
+                localVideoRef.current.srcObject = stream;
+                setLocalStream(stream);
+            }
+
+            // Initiate the call
+            const call = peer.call(remotePeerId, stream);
+            // Set up stream handling for the call
+            handleStream(stream, call);
+        } catch (err) {
+            setError('Failed to access media devices. Please check permissions.');
+            setIsInCall(false);
+        }
+    };
+
+    /**
+     * Clean up all connections and media streams
+     * Ensures proper cleanup of all resources when ending a call
+     * Handles both peer connections and media tracks
+     */
     const endCall = () => {
-        // console.log(peer.connections)
-        for (let conns in peer.connections) {
-            peer.connections[conns].forEach((conn, index, array) => {
-              console.log(`closing ${conn.connectionId} peerConnection (${index + 1}/${array.length})`, conn.peerConnection);
-              conn.peerConnection.close();
-        
-              // close it using peerjs methods
-              if (conn.close)
-                conn.close();
+        // Clean up peer connections
+        if (peer) {
+            Object.values(peer.connections).forEach(conns => {
+                conns.forEach(conn => {
+                    if (conn.peerConnection) {
+                        conn.peerConnection.close();
+                    }
+                    if (conn.close) {
+                        conn.close();
+                    }
+                });
             });
-          }
-        if (localVideoRef.current.srcObject) {
+        }
+
+        // Clean up local video stream
+        if (localVideoRef.current?.srcObject) {
             const stream = localVideoRef.current.srcObject;
-            
-            // Stop each track in the stream
-            stream.getTracks().forEach((track) => {
-              track.stop();
-            });
-        
-            // Clear the srcObject to stop video playback
+            stream.getTracks().forEach(track => track.stop());
             localVideoRef.current.srcObject = null;
+            setLocalStream(null);
         }
-        if ( remoteVideoRef.current.srcObject) {
+
+        // Clean up remote video stream
+        if (remoteVideoRef.current?.srcObject) {
             const stream = remoteVideoRef.current.srcObject;
-            
-            // console.log('stream tracks', stream.getTracks())
-            // way to turn off media devices
-            stream.getTracks().forEach((track) => {
-              track.stop();
-            });
+            stream.getTracks().forEach(track => track.stop());
             remoteVideoRef.current.srcObject = null;
-            // console.log('2nd stream tracks', stream.getTracks())
+            setRemoteStream(null);
         }
-    }
 
+        setIsInCall(false);
+    };
+
+    // Initialize peer connection on component mount
     useEffect(() => {
-        initializePeer()
+        initializePeer();
 
-        // Cleanup function
+        // Cleanup function for component unmount
         return () => {
-        // Disconnect from PeerJS server when component unmounts
+            clearTimeout(connectionTimeoutRef.current);
+            endCall();
             if (peer) {
                 peer.disconnect();
             }
@@ -151,13 +250,27 @@ const VideoChat = () => {
     return (
         <div className={`videoContainer ${user ? "" : "hidden"}`}>
             <h1 className="title">Video Chat</h1>
+            {/* Display error messages */}
+            {error && <div className="error-message">{error}</div>}
+            {/* Display connection status */}
+            {isConnecting && <div className="connecting-message">Connecting to server...</div>}
             <h3 className="subtitle">Your call id is: {callId}</h3>
-            <div>
-                {/* User's video */}
-                <video style={{width:'25%', height:'auto'}} ref={localVideoRef} autoPlay muted playsInline />
-                {/* callers video */}
-                <video ref={remoteVideoRef} autoPlay playsInline />
+            {/* Video grid for local and remote streams */}
+            <div className="video-grid">
+                <video 
+                    style={{width:'25%', height:'auto'}} 
+                    ref={localVideoRef} 
+                    autoPlay 
+                    muted 
+                    playsInline 
+                />
+                <video 
+                    ref={remoteVideoRef} 
+                    autoPlay 
+                    playsInline 
+                />
             </div>
+            {/* Call controls */}
             <div className="inputForm">
                 <input
                     className="callInput"
@@ -165,13 +278,25 @@ const VideoChat = () => {
                     placeholder="Enter Call ID"
                     value={remotePeerId}
                     onChange={(e) => setRemotePeerId(e.target.value)}
+                    disabled={isInCall}
                 />
-                <button className="button1" onClick={handleCall}>Call</button>
-                <button className="button1" onClick={endCall}>End</button>
+                <button 
+                    className="button1" 
+                    onClick={handleCall}
+                    disabled={isInCall || isConnecting}
+                >
+                    Call
+                </button>
+                <button 
+                    className="button1" 
+                    onClick={endCall}
+                    disabled={!isInCall}
+                >
+                    End
+                </button>
             </div>
         </div>
     );
 };
-    
 
-export default VideoChat
+export default VideoChat;
