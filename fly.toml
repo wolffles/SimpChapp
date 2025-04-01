@@ -1,75 +1,75 @@
-# fly.toml app configuration file generated for simpchapp on 2024-03-29T13:30:26-04:00
+# fly.toml app configuration file generated for simpchapp-wandering-dawn-7315 on 2025-04-01T15:11:17-07:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'simpchapp'
+app = 'simplyChatApp'
 primary_region = 'dfw'
+
+[experimental]
+  auto_rollback = true
 
 [build]
 
 [env]
-  FIRST_APP_PORT = "8080"
-  SECOND_APP_PORT = "9090"
+  FIRST_APP_PORT = '8080'
+  SECOND_APP_PORT = '9090'
 
-[experimental]
-  allowed_public_ports = []
-  auto_rollback = true
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
 
 [[services]]
-  http_checks = []
+  protocol = 'tcp'
   internal_port = 5050
-  processes = ["app"]
-  protocol = "tcp"
-  script_checks = []
+  processes = ['app']
+
+  [[services.ports]]
+    port = 80
+    handlers = ['http']
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ['tls', 'http']
 
   [services.concurrency]
+    type = 'connections'
     hard_limit = 25
     soft_limit = 20
-    type = "connections"
-
-  [[services.ports]]
-    force_https = true
-    handlers = ["http"]
-    port = 80
-
-  [[services.ports]]
-    handlers = ["tls", "http"]
-    port = 443
 
   [[services.tcp_checks]]
-    grace_period = "1s"
-    interval = "15s"
-    restart_limit = 0
-    timeout = "2s"
+    interval = '15s'
+    timeout = '2s'
+    grace_period = '1s'
 
 [[services]]
-  http_checks = []
+  protocol = 'tcp'
   internal_port = 5051
-  processes = ["app"]
-  protocol = "tcp"
-  script_checks = []
+  processes = ['app']
+
+  [[services.ports]]
+    port = 5051
+    handlers = ['http']
+    force_https = true
+
+  [[services.ports]]
+    port = 5051
+    handlers = ['tls', 'http']
 
   [services.concurrency]
+    type = 'connections'
     hard_limit = 25
     soft_limit = 20
-    type = "connections"
-
-  [[services.ports]]
-    force_https = true
-    handlers = ["http"]
-    port = 5051
-
-  [[services.ports]]
-    handlers = ["tls", "http"]
-    port = 5051
 
   [[services.tcp_checks]]
-    grace_period = "1s"
-    interval = "15s"
-    restart_limit = 0
-    timeout = "2s"
-
+    interval = '15s'
+    timeout = '2s'
+    grace_period = '1s'
 
 [[vm]]
   memory = '1gb'
