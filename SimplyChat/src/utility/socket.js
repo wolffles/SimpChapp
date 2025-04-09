@@ -1,8 +1,8 @@
 import openSocket from 'socket.io-client';
 let host
 console.log(window.origin)
-if(window.origin.includes("simpchapp")) {
-    host = "https://simpchapp.fly.dev/" 
+if(window.origin.includes("simply")) {
+    host = "https://simply-chat-app.fly.dev/" 
 } else {
     host = "http://localhost:5050"
 }

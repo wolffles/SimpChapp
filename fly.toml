@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for simpchapp-wandering-dawn-7315 on 2025-04-01T15:11:17-07:00
+# fly.toml app configuration file generated for simply-chat-app on 2025-04-08T21:14:19-07:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -10,66 +10,57 @@ primary_region = 'dfw'
   auto_rollback = true
 
 [build]
-  dockerfile = "Dockerfile"
- 
+  dockerfile = 'Dockerfile'
+
 [[services]]
-  http_checks = []
+  protocol = 'tcp'
   internal_port = 5050
-  processes = ["app"]
-  protocol = "tcp"
-  script_checks = []
+  processes = ['app']
+
+  [[services.ports]]
+    port = 80
+    handlers = ['http']
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ['tls', 'http']
 
   [services.concurrency]
+    type = 'connections'
     hard_limit = 25
     soft_limit = 20
-    type = "connections"
-
-  [[services.ports]]
-    force_https = true
-    handlers = ["http"]
-    port = 80
-
-  [[services.ports]]
-    handlers = ["tls", "http"]
-    port = 443
 
   [[services.tcp_checks]]
-    grace_period = "1s"
-    interval = "15s"
-    restart_limit = 0
-    timeout = "2s"
+    interval = '15s'
+    timeout = '2s'
+    grace_period = '1s'
 
 [[services]]
-  http_checks = []
+  protocol = 'tcp'
   internal_port = 5051
-  processes = ["app"]
-  protocol = "tcp"
-  script_checks = []
+  processes = ['app']
+
+  [[services.ports]]
+    port = 5051
+    handlers = ['http']
+    force_https = true
+
+  [[services.ports]]
+    port = 5051
+    handlers = ['tls', 'http']
 
   [services.concurrency]
+    type = 'connections'
     hard_limit = 25
     soft_limit = 20
-    type = "connections"
-
-  [[services.ports]]
-    force_https = true
-    handlers = ["http"]
-    port = 5051
-
-  [[services.ports]]
-    handlers = ["tls", "http"]
-    port = 5051
 
   [[services.tcp_checks]]
-    grace_period = "1s"
-    interval = "15s"
-    restart_limit = 0
-    timeout = "2s"
+    interval = '15s'
+    timeout = '2s'
+    grace_period = '1s'
 
 [[vm]]
   memory = '1gb'
   cpu_kind = 'shared'
   cpus = 1
-
-[http_service]
-  min_machines_running = 1
