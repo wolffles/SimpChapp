@@ -23,13 +23,15 @@ const VideoChat = () => {
     const [isConnecting, setIsConnecting] = useState(false);
     // State to track if we're currently in an active call
     const [isInCall, setIsInCall] = useState(false);
-    
+    const [videosMap, setVideosMap] = useState([]);
+    const [pinnedVideo, setPinnedVideo] = useState(null);
     // Reference to the local video element
     const localVideoRef = useRef(null);
     // Reference to the remote video element
     const remoteVideoRef = useRef(null);
     // Reference to store the connection timeout ID for cleanup
     const connectionTimeoutRef = useRef(null);
+    const [showCopied, setShowCopied] = useState(false);
 
     /**
      * Initialize PeerJS connection with error handling and timeout
@@ -96,68 +98,13 @@ const VideoChat = () => {
     };
 
     /**
-     * Handle incoming calls with proper error handling
-     * Manages the process of answering an incoming call
-     * Includes media device access and stream handling
-     */
-    const handleIncomingCall = async (call) => {
-        try {
-            setIsInCall(true);
-            // Request access to user's media devices
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: true, 
-                audio: true 
-            });
-            
-            // Answer the call with the local stream
-            call.answer(stream);
-            // Set up stream handling for the call
-            handleStream(stream, call);
-        } catch (err) {
-            setError('Failed to access media devices. Please check permissions.');
-            call.close();
-            setIsInCall(false);
-        }
-    };
-
-    /**
-     * Handle media streams with error checking
-     * Manages both local and remote streams
-     * Sets up event handlers for stream events
-     */
-    const handleStream = (stream, call) => {
-        // Set up local video stream
-        if (localVideoRef.current) {
-            localVideoRef.current.srcObject = stream;
-            setLocalStream(stream);
-        }
-
-        // Handle incoming remote stream
-        call.on('stream', (remoteStream) => {
-            setRemoteStream(remoteStream);
-            if (remoteVideoRef.current) {
-                remoteVideoRef.current.srcObject = remoteStream;
-            }
-        });
-
-        // Handle call closure
-        call.on('close', () => {
-            endCall();
-        });
-
-        // Handle call errors
-        call.on('error', (err) => {
-            setError(`Call error: ${err.message}`);
-            endCall();
-        });
-    };
-
-    /**
      * Initiate outgoing call with validation
      * Handles the process of making an outgoing call
      * Includes input validation and media device access
      */
     const handleCall = async () => {
+        //setVideosMap is async so we need to create a sync version to use in the if statement below.
+        let videoStreams = []
         // Validate remote peer ID
         if (!remotePeerId.trim()) {
             setError('Please enter a valid call ID');
@@ -182,18 +129,168 @@ const VideoChat = () => {
             if (localVideoRef.current) {
                 localVideoRef.current.srcObject = stream;
                 setLocalStream(stream);
+                videoStreams.push({
+                    id: "local",
+                    ref: localVideoRef,
+                    stream: stream,
+                    muted: true
+                });
             }
 
             // Initiate the call
             const call = peer.call(remotePeerId, stream);
-            // Set up stream handling for the call
-            handleStream(stream, call);
+            // Set up remotestream handling for the call
+            // handleStream(stream, call);
+            call.on('stream', (remoteStream) => {
+                if (remoteVideoRef.current) {
+                    if (!videoStreams.some(v => v.id === call.peer)) {
+                        remoteVideoRef.current.srcObject = remoteStream;
+                        videoStreams.push({
+                            id: call.peer,
+                            ref: remoteVideoRef,
+                            stream: remoteStream,
+                            muted: false
+                        });
+                    }
+                }
+            });
+            setVideosMap(videoStreams);
         } catch (err) {
             setError('Failed to access media devices. Please check permissions.');
             setIsInCall(false);
         }
     };
 
+    /**
+     * Handle incoming calls with proper error handling
+     * Manages the process of answering an incoming call
+     * Includes media device access and stream handling
+     */
+    const handleIncomingCall = async (call) => {
+        try {
+            let videoStreams = []
+            setIsInCall(true);
+            // Request access to user's media devices
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: true, 
+                audio: true 
+            });
+            // Set up local video
+            if (localVideoRef.current) {
+                localVideoRef.current.srcObject = stream;
+                setLocalStream(stream);
+                videoStreams.push({
+                    id: 'local',
+                    ref: localVideoRef,
+                    stream: stream,
+                    muted: true
+                });
+            }
+            
+            // Answer the call with the local stream
+            call.answer(stream);
+            // Set up stream handling for the call
+            // handleStream(stream, call);
+             // Handle incoming stream from the caller
+            call.on('stream', (remoteStream) => {
+                if (remoteVideoRef.current) {
+                    if (!videoStreams.some(v => v.id === call.peer)) {
+                        remoteVideoRef.current.srcObject = remoteStream;
+                        videoStreams.push({
+                            id: call.peer,
+                            ref: remoteVideoRef,
+                            stream: remoteStream,
+                            muted: false
+                        });
+                    }
+                    setPinnedVideo(remoteStream);
+                }
+            });
+            setVideosMap(videoStreams);
+        } catch (err) {
+            setError('Failed to access media devices. Please check permissions.');
+            call.close();
+            setIsInCall(false);
+        }
+    };
+
+    /**
+     * Handle media streams with error checking
+     * Manages both local and remote streams
+     * Sets up event handlers for stream events
+     */
+    const handleStream = (stream, call) => {
+        // Set up local video stream
+        let localvideo;
+        let remotevideo;
+
+        if (localVideoRef.current) {
+            console.log("local video ref", localVideoRef.current)
+            localVideoRef.current.srcObject = stream;
+            setLocalStream(stream);
+            localvideo =  {
+                    id: call.peer || "local",
+                    ref: localVideoRef,
+                    stream: stream,
+                    muted: true
+                };
+        }
+
+        // Handle incoming remote stream
+        call.on('stream', (remoteStream) => {
+            if (remoteVideoRef.current) {
+                console.log("remote video ref", remoteVideoRef.current)
+                remoteVideoRef.current.srcObject = remoteStream;
+                setRemoteStream(remoteStream);
+                remotevideo = {
+                    id: call.peer,
+                    ref: remoteVideoRef,
+                    stream: remoteStream,
+                    muted: false
+                };
+                setPinnedVideo(remotevideo);
+            }
+        });
+        
+        setVideosMap(prevVideos => [...prevVideos, localvideo, remotevideo]);
+        
+        // Handle call closure
+        call.on('close', () => {
+            endCall();
+        });
+
+        // Handle call errors
+        call.on('error', (err) => {
+            setError(`Call error: ${err.message}`);
+            endCall();
+        });
+    };
+
+    const handleVideoClick = () => {
+        setPinnedVideo({
+            id: pinnedVideo?.id === 'local' ? 'remote' : 'local',
+            ref: pinnedVideo?.id === 'local' ? remoteVideoRef : localVideoRef,
+            stream: pinnedVideo?.id === 'local' ? remoteStream : localStream,
+            muted: pinnedVideo?.id === 'local' ? false : true
+        });
+        console.log("pinned video", pinnedVideo)
+    };
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(callId);
+        setShowCopied(true);
+        setTimeout(() => setShowCopied(false), 1000);
+    };
+
+    const videolabel = () => {
+        if(pinnedVideo?.id === 'local'){
+            return 'You'
+        }else if(pinnedVideo?.id === 'remote'){
+            return 'Remote User'
+        }else{
+            return 'Video not started'
+        }
+    }
     /**
      * Clean up all connections and media streams
      * Ensures proper cleanup of all resources when ending a call
@@ -247,62 +344,10 @@ const VideoChat = () => {
         };
     }, []);
 
-    // Add these styles at the top of the file after the imports
-    const videoStyles = {
-        videoGrid: {
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '16px',
-            padding: '16px',
-            height: '100%',
-            width: '100%',
-            backgroundColor: '#1a1a1a',
-            borderRadius: '8px',
-        },
-        videoContainer: {
-            position: 'relative',
-            width: '100%',
-            aspectRatio: '16/9',
-            backgroundColor: '#2a2a2a',
-            borderRadius: '8px',
-            overflow: 'hidden',
-        },
-        videoElement: {
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-        },
-        videoLabel: {
-            position: 'absolute',
-            bottom: '8px',
-            left: '8px',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            color: 'white',
-            padding: '4px 8px',
-            borderRadius: '4px',
-            fontSize: '14px',
-        },
-    };
-
     return (
         <div className={`videoContainer ${user ? "" : "hidden"}`}>
-            <div className="video-toolbar">
-                <div className="toolbar-left" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    width: '100%'
-                }}>
-                    <h1 className="toolbar-title" style={{paddingLeft: '20px'}}>Simply Chat</h1>
-                    <span className="call-id" style={{paddingRight: '20px'}}>ID: {callId}</span>
-                </div>
-                
-                <div className="toolbar-center">
-                    {error && <div className="error-message">{error}</div>}
-                    {isConnecting && <div className="connecting-message">Connecting to server...</div>}
-                </div>
-
-                <div className="toolbar-right">
+            <div className="video-toolbar" style={{display: 'flex', paddingTop: '10px', paddingBottom: '10px'}}>
+                <div className="toolbar-left">
                     <input
                         className="call-input"
                         type="text"
@@ -326,18 +371,59 @@ const VideoChat = () => {
                         End
                     </button>
                 </div>
-            </div>
-            <div style={videoStyles.videoGrid}>
-                <div style={videoStyles.videoContainer}>
-                    <video 
-                        ref={localVideoRef} 
-                        autoPlay 
-                        muted 
-                        playsInline 
-                        style={videoStyles.videoElement}
-                    />
-                    <div style={videoStyles.videoLabel}>You</div>
+                <div className="toolbar-right" style={{marginLeft: 'auto', cursor: 'pointer', position: 'relative'}}>
+                    <button 
+                        className="call-id" 
+                        onClick={() => {
+                            handleCopy();
+                            // Add darker color on click via inline styles
+                            const btn = event.target;
+                            btn.style.backgroundColor = '#2a2a2a';
+                            setTimeout(() => btn.style.backgroundColor = '', 200);
+                          
+                        }} 
+                        style={{
+                            paddingRight: '20px', 
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s'
+                        }}
+                    >
+                        ID: {callId}
+                    </button>
+                    {showCopied && (
+                        <div style={{
+                            position: 'absolute',
+                            backgroundColor: '#2a2a2a',
+                            color: 'white',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            top: '100%',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            zIndex: 1000
+                        }}>
+                            Copied!
+                        </div>
+                    )}
                 </div>
+            </div>
+            <div className="toolbar-messages">
+                    {error && <div className="error-message">{error}</div>}
+                    {isConnecting && <div className="connecting-message">Connecting to server...</div>}
+                </div>
+            <div className="video-container">
+                <video 
+                    ref={pinnedVideo?.id === 'local' ? localVideoRef : remoteVideoRef} 
+                    autoPlay 
+                    muted 
+                    playsInline 
+                    className="main-video"
+                />
+                <div className="videoLabel">
+                    {videolabel()}
+                </div>
+                {/*                 
                 <div style={videoStyles.videoContainer}>
                     <video 
                         ref={remoteVideoRef} 
@@ -346,6 +432,19 @@ const VideoChat = () => {
                         style={videoStyles.videoElement}
                     />
                     <div style={videoStyles.videoLabel}>Remote User</div>
+                </div> */}
+            </div>
+            <div className="video-thumbnails">
+                <div 
+                    className="thumbnail"
+                    >
+                    <video
+                        onClick={() => handleVideoClick()}
+                        ref={pinnedVideo?.id === 'local' ? remoteVideoRef : localVideoRef}
+                        autoPlay
+                        playsInline
+                        muted={pinnedVideo?.id !== 'local'}
+                    />
                 </div>
             </div>
         </div>
@@ -353,3 +452,37 @@ const VideoChat = () => {
 };
 
 export default VideoChat;
+
+{/* <div className="pinned-video">
+{pinnedVideo ? (
+    <video
+        ref={pinnedVideo.ref}
+        autoPlay
+        playsInline
+        muted={pinnedVideo.muted}
+        className="main-video"
+    />
+) : (
+    <div className="placeholder">No video pinned</div>
+)}
+</div>
+
+// {/* Thumbnail strip */}
+{/* <div className="video-thumbnails">
+    {console.log("videos array", videosMap)}
+{videosMap.map((video) => (
+    <div 
+        key={video.id}
+        className={`thumbnail ${video.id === pinnedVideo?.id ? 'active' : ''}`}
+        onClick={() => handleVideoClick(video)}
+    >
+        <video
+            ref={video.ref}
+            autoPlay
+            playsInline
+            muted={video.muted}
+        />
+    </div>
+))}
+</div> */}
+// </div> */}

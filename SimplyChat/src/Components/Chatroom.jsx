@@ -94,6 +94,7 @@ const Chatroom = () => {
     <div className={`chat ${user ? "" : "hidden"}`}>
       <div className="chatArea">
         <div id="messages" className={"messages "+ (image ? "withpreview" : "")}>
+          <h1 style={{margin: 'auto', textAlign: 'center'}}>Simply Chat</h1>
           <MessageList messages={localMessageList} />   
         </div>
         <div className={"inputMessageBox " + (image ? "withpreview" : "")}>
