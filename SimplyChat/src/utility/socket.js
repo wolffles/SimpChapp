@@ -1,4 +1,5 @@
-import openSocket from 'socket.io-client';
+import io from 'socket.io-client';
+
 let host
 console.log(window.origin)
 if(window.origin.includes("simply")) {
@@ -8,7 +9,15 @@ if(window.origin.includes("simply")) {
 }
 
 console.log('here is the host server', host);
-export const socket = openSocket(host);
+
+const socket = io(host, {
+    transports: ['websocket', 'polling'],
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000,
+});
+
 export const hostname = new URL(host).hostname
 // to server
 export const sendMessage = (data) => {

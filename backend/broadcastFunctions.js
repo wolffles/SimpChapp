@@ -4,7 +4,7 @@
  * emitDataToClient sends information to the client listening or that requested information, designed to go inside of a listener
  * @param {Object} room 
  */
-const clearToBroadcast = (room) => {
+export const clearToBroadcast = (room) => {
     room.toBroadcast = {
         userJoined:"",
         userLeft: "",
@@ -19,16 +19,17 @@ const clearToBroadcast = (room) => {
  * @param {String} listenString 
  * @param {Object} dataObj 
  */
-const emitDataToClient= (socket, listenString, dataObj) => {
+export const emitDataToClient= (socket, listenString, dataObj) => {
     socket.emit(listenString, dataObj)
 }
+
 /**
  * broad cast to all in room exluding sender
  * @param {Socket} socket 
  * @param {String} listenString 
  * @param {Object} dataObj 
  */
-const broadcastRoomExcludeSender = (socket, roomName, listenString, dataObj ) => {
+export const broadcastRoomExcludeSender = (socket, roomName, listenString, dataObj ) => {
     socket.to(roomName).emit(listenString, dataObj)
 }
 
@@ -39,7 +40,6 @@ const broadcastRoomExcludeSender = (socket, roomName, listenString, dataObj ) =>
  * @param {*} listenString 
  * @param {*} roomObj 
  */
-const broadcastToRoom = (io, roomName, listenString, roomObj) => { 
-      io.in(roomName).emit(listenString, roomObj);}
-
-module.exports = { clearToBroadcast, emitDataToClient, broadcastRoomExcludeSender, broadcastToRoom };
+export const broadcastToRoom = (io, roomName, listenString, roomObj) => { 
+    io.in(roomName).emit(listenString, roomObj);
+}

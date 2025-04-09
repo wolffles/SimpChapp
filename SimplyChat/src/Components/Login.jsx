@@ -38,12 +38,12 @@ const Login = () => {
         }
 
         if (!socket.connected) {
-            setError('Not connected to server. Please try again.');
+            setError('Error connecting to the server, maybe you have to many connections already?');
             return;
         }
 
         try {
-            const tempUser = {username: username, roomName: undefined};
+            const tempUser = {username: username, roomName: 'global'};
             console.log('Setting user:', tempUser);
             setUser(tempUser);
             console.log('Emitting add user event');

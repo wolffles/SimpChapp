@@ -1,24 +1,61 @@
-const {userConnectedToRoom, userDisconnected} = require( './backend/serverChatRoomFunctions')
-const {broadcastToRoom} = require('./backend/broadcastFunctions')
-const { ExpressPeerServer } = require("peer");
+import {userConnectedToRoom, userDisconnected} from './backend/serverChatRoomFunctions.js';
+import {broadcastToRoom} from './backend/broadcastFunctions.js';
+import { ExpressPeerServer } from "peer";
+import notifyAnotherTing from './backend/anotherTingRequests.js';
 // Setup basic express server
-const express = require('express');
+import { Server } from 'socket.io';
+import express from 'express';
+import path from 'path';
+import rateLimit from 'express-rate-limit';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+
+
 const app = express();
-const path = require('path')
+// Rate limiting configuration
+const httpLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 1000, // limit each IP to 1000 requests per hour
+  message: "Too many requests from this IP, please try again after an hour"
+});
+
+// Apply rate limiting to all routes
+app.use(httpLimiter);
+
 console.log(process.env.PORT)
 const ioPort = process.env.PORT || 5050;
 const peerPort = process.env.PORT || 5051
 const ioListen = app.listen(ioPort, '0.0.0.0', () => {console.log('app listening for io at port %d', ioPort);})
 const peerListen = app.listen(peerPort, '0.0.0.0', () => {console.log('app listening for peer at port %d', peerPort);})
+const io = new Server(ioListen, {
+  cors: {
+    origin: ["http://localhost:5173", "http://localhost:5050", "https://simply-chat-app.fly.dev"],  // Allow both your frontend and backend origins
+    methods: ["GET", "POST"],
+    credentials: true,
+    allowedHeaders: ["*"]
+  },
+  // Connection management options
+  pingTimeout: 5000,        // How long to wait for a pong response (default: 5s)
+  pingInterval: 25000,      // How often to ping the client (default: 25s)
+  upgradeTimeout: 10000,    // How long to wait for an upgrade response (default: 10s)
+  maxHttpBufferSize: 1e6,   // Maximum size of packets (default: 1MB)
+  transports: ['polling', 'websocket'],
+  connectTimeout: 600000,    // Disconnect if no connection after 10 minutes
+  serverClient: false,      // Don't connect to own server
+  disconnectOnUnload: true  // Disconnect when browser window closes
+});
 
-const io = require('socket.io')(ioListen);
+
 const peerServer = ExpressPeerServer(peerListen, {
   debug:true,
 	path: "/peerConnect",
 });
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 if (!app.get('env') != "development"){
-  app.use(express.static(path.join(__dirname, '/SimplyChat/dist'),{
+  app.use(express.static(path.join(__dirname, '/SimplyChat/dist'), {
     extensions: ['html']
   }));
 
@@ -26,21 +63,11 @@ if (!app.get('env') != "development"){
     res.sendFile(__dirname + '/SimplyChat/dist/index.html');
   });
 }
-// const host = process.env.HOSTNAME || "https://localhost/";
-//serve the static files from this path
 
-
-// server.listen(ioPort, () => {
-//   console.log('Server listening at port %d', ioPort);
-// });
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routing
-// app.use(express.static(path.join(__dirname, 'SimplyChat'),{
-//   extensions: ['html']
-// }));
 
 //localhost:5051/peerjs/peerConnect
 app.use('/peerjs',peerServer )
@@ -71,20 +98,6 @@ const broadcastRoomExcludeSender = (socket, roomName, listenString, dataObj ) =>
   socket.to(roomName).emit(listenString, dataObj)
 }
 
-// function handleExit(err) {
-//   if (err) {
-//     errors.report(err);
-//   }
-//   if (options.exit) {
-//     process.exit();
-//   }
-// }
-
-// process.on("exit", handleExit.bind(null));
-// process.on("SIGINT", handleExit.bind(null));
-// process.on("SIGTERM", handleExit.bind(null));
-// process.on("uncaughtException", handleExit.bind(null));
-
 
 /**
  * Map to track all active peer connections
@@ -92,6 +105,7 @@ const broadcastRoomExcludeSender = (socket, roomName, listenString, dataObj ) =>
  * Value: Object containing connection metadata
  */
 const activePeers = new Map();
+const activeVideoSessions = new Map();
 
 // peerJS connection handling
 peerServer.on('connection', (client) => { 
@@ -162,56 +176,74 @@ let rooms = {
   }
 }
 
+// Socket.IO rate limiting and connection tracking
+const connectedIPs = new Map(); // Track connections per IP
+const messageCounts = new Map(); // Track message counts per IP
+
+// Function to check if an IP has exceeded connection limit
+const checkConnectionLimit = (ip) => {
+  if (!connectedIPs.has(ip)) {
+    connectedIPs.set(ip, new Set());
+  }
+  return connectedIPs.get(ip).size < 5; // Max 5 connections per IP
+};
+
+// Function to check message rate limit
+const checkMessageLimit = (ip) => {
+  if (!messageCounts.has(ip)) {
+    messageCounts.set(ip, {
+      count: 0,
+      resetTime: Date.now() + (60 * 60 * 1000) // 1 hour
+    });
+  }
+  
+  const userData = messageCounts.get(ip);
+  
+  // Reset count if an hour has passed
+  if (Date.now() > userData.resetTime) {
+    userData.count = 0;
+    userData.resetTime = Date.now() + (60 * 60 * 1000);
+  }
+  
+  // Allow 100 messages per hour
+  if (userData.count >= 100) {
+    return false;
+  }
+  
+  userData.count++;
+  return true;
+};
+
+// Chatroom
 io.on('connection', (socket) => {
+  const clientIP = socket.handshake.address;
+  
+  // Check connection limit
+  if (!checkConnectionLimit(clientIP)) {
+    notifyAnotherTing('User exceeded connection limit', 'UserIP: ' + clientIP + ' Connection limit exceeded. Maximum 5 connections per IP.');
+    socket.emit('error', { message: 'Connection limit exceeded. Maximum 5 connections per IP.' });
+    socket.disconnect(true);
+    return;
+  }
+  
+  // Add to connected IPs
+  connectedIPs.get(clientIP).add(socket.id);
+  
   let url = socket.request.headers.referer
   var addedUser = false;
-  // Variables to store interval and timeout IDs for cleanup
-  let heartbeatInterval;
-  let connectionTimeout;
-
-  /**
-   * Sets up a heartbeat mechanism to keep track of active connections
-   * Sends a ping every 20 seconds to the client
-   */
-  const setupHeartbeat = () => {
-    heartbeatInterval = setInterval(() => {
-      socket.emit('ping');
-    }, 20000); // Send heartbeat every 20 seconds
-  };
-
-  /**
-   * Sets up a connection timeout
-   * If no response is received within 2 minutes, the connection is terminated
-   */
-  const setupConnectionTimeout = () => {
-    connectionTimeout = setTimeout(() => {
-      if (socket.connected) {
-        console.log(`Connection timeout for socket ${socket.id}`);
-        socket.disconnect(true);
-      }
-    }, 600000); // 10 minute timeout
-  };
-
-  /**
-   * Handles pong responses from the client
-   * Resets the connection timeout when a pong is received
-   */
-  socket.on('pong', () => {
-    clearTimeout(connectionTimeout);
-    setupConnectionTimeout();
-  });
 
   // Handle new user connections
   socket.on('add user', (userData) => {
     try {
       // Validate username and disconnect if invalid
+      console.log("add user data", userData)
       if (!userData.username) {
         socket.disconnect(true);
         return;
       }
       
       // Set up room and user data
-      roomName = userData.roomName ?? 'global';
+      let roomName = userData.roomName ?? 'global';
       socket.roomName = roomName;
       socket.username = userData.username;
 
@@ -220,11 +252,7 @@ io.on('connection', (socket) => {
       addedUser = true;
       rooms[roomName] = userConnectedToRoom(rooms[roomName], userData.username);
       
-      // Initialize connection monitoring
-      setupHeartbeat();
-      setupConnectionTimeout();
-      
-      // Broadcast updated room state to all users
+      // Broadcast updated room state
       broadcastToRoom(io, roomName, 'update room state', rooms[roomName]);
     } catch (error) {
       console.error('Error in add user:', error);
@@ -234,6 +262,11 @@ io.on('connection', (socket) => {
 
   // when the client emits 'new message', this listens and executes
   socket.on('user message', (data) => {
+    if (!checkMessageLimit(clientIP)) {
+      notifyAnotherTing('User exceeded rate limit', 'UserIP: ' + clientIP + ' Message rate limit exceeded. Maximum 100 messages per hour.');
+      socket.emit('error', { message: 'Message rate limit exceeded. Please wait before sending more messages.' });
+      return;
+    }
     roomEmit(socket, data)
   });
 
@@ -274,10 +307,6 @@ io.on('connection', (socket) => {
     let roomName = socket.roomName
     if (addedUser) {
       try {
-        // Clean up connection monitoring resources
-        clearInterval(heartbeatInterval);
-        clearTimeout(connectionTimeout);
-        
         // Update room state
         userDisconnected(rooms[roomName], socket.username);
         
@@ -295,6 +324,12 @@ io.on('connection', (socket) => {
         broadcastRoomExcludeSender(socket,roomName,'update room state', rooms[roomName])
       } catch (error) {
         console.error('Error in disconnect handler:', error);
+      }
+    }
+    if (connectedIPs.has(clientIP)) {
+      connectedIPs.get(clientIP).delete(socket.id);
+      if (connectedIPs.get(clientIP).size === 0) {
+        connectedIPs.delete(clientIP);
       }
     }
   });

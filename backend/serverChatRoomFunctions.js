@@ -1,5 +1,4 @@
-const {clearToBroadcast} = require('./broadcastFunctions');
-
+import { clearToBroadcast } from './broadcastFunctions.js';
 
 const COLORS2 = [
     '#e21400', '#91580f', '#f8a700', '#f78b00',
@@ -57,29 +56,29 @@ const getUsernameColor = (username) => {
         }
     }
 
-    // newPlayerInRoom: function(room,player){
-    //     room.savedPlayers[player.username] = player
-    //     room.savedPlayersList.push(player.username)
-    //     return room
-    // },
+// newPlayerInRoom: function(room,player){
+//     room.savedPlayers[player.username] = player
+//     room.savedPlayersList.push(player.username)
+//     return room
+// },
 
- const userConnectedToRoom = (room, username) => {
-        room.connectedUsersList.push(username);
-        clearToBroadcast(room)
-        room.broadcast = true
-        room.toBroadcast.userJoined = [`New user, ${username} joined `, undefined]
-        room.toBroadcast.numUsers = [`There's ${room.connectedUsersList.length} participants`, undefined]
-        return room
-    }
+const userConnectedToRoom = (room, username) => {
+    room.connectedUsersList.push(username);
+    clearToBroadcast(room)
+    room.broadcast = true
+    room.toBroadcast.userJoined = [`New user, ${username} joined `, undefined]
+    room.toBroadcast.numUsers = [`There's ${room.connectedUsersList.length} participants`, undefined]
+    return room
+}
 
- const userDisconnected = (room, username) => {
-        let idx = room.connectedUsersList.indexOf(username);
-        room.connectedUsersList.splice(idx, 1);
-        clearToBroadcast(room)
-        room.broadcast = true
-        room.toBroadcast.userLeft = [username + " left the room"]
-        room.toBroadcast.numUsers = [`There's ${room.connectedUsersList.length} participants`]
-    }
+const userDisconnected = (room, username) => {
+    let idx = room.connectedUsersList.indexOf(username);
+    room.connectedUsersList.splice(idx, 1);
+    clearToBroadcast(room)
+    room.broadcast = true
+    room.toBroadcast.userLeft = [username + " left the room"]
+    room.toBroadcast.numUsers = [`There's ${room.connectedUsersList.length} participants`]
+}
 
  const removeUser = (room, username) => {
         delete room.savedPlayers[username];
@@ -96,7 +95,12 @@ const getUsernameColor = (username) => {
         }
     }
 
-
-module.exports = {
-    createChatRoom, createPlayerObj, userConnectedToRoom, userDisconnected, removeUser, deleteRoom
-}
+export {
+    getUsernameColor,
+    createChatRoom,
+    createPlayerObj,
+    userConnectedToRoom,
+    userDisconnected,
+    removeUser,
+    deleteRoom
+};

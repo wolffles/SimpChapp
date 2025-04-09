@@ -53,11 +53,24 @@ const Chatroom = () => {
 
     });
 
-    socket.on('disconnect', () => {
-      var today = new Date();
-      var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds() + ":" + today.getMilliseconds();
-      console.log("you've been disconnected ", time)
-      addMessage('you have been disconnected');
+    socket.on('disconnect', (reason) => {
+      console.log("Disconnect reason:", reason);  // Add this to see what's happening
+  
+      // Let's be more specific about which reasons to ignore
+      const ignoredReasons = [
+        'io client disconnect',    // Manual disconnection
+        'transport close',         // Normal transport closure
+        'transport error',         // Initial connection attempts
+        'ping timeout',           // Initial connection attempts
+        'client namespace disconnect' // Client-side namespace disconnect
+      ];
+    
+      if (!ignoredReasons.includes(reason)) {
+        var today = new Date();
+        var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds() + ":" + today.getMilliseconds();
+        console.log("you've been disconnected ", time)
+        addMessage('you have been disconnected');
+      }
     });
 
     socket.on('update room state', (roomData) => {

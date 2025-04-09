@@ -3,6 +3,14 @@
 Simple Chat APP
 
 Node, express, socketIO, PeerJS, Vite, React
+SocketIO for chats, and PeerJs for video calls.
+How Video Chat Works:
+When User A wants to call User B:
+User A connects to PeerServer and gets an ID
+User B connects to PeerServer and gets an ID
+User A initiates call using User B's ID
+PeerServer helps establish direct P2P connection
+Video/Audio streams directly between users (not through server).
 
 ## to Deploy
 in production it serves static files created in dist/ 
