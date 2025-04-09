@@ -4,7 +4,7 @@ Simple Chat APP
 
 Node, express, socketIO, PeerJS, Vite, React
 SocketIO for chats, and PeerJs for video calls.
-How Video Chat Works:
+How Video Chat Works (WebRTC - real time communication.):
 When User A wants to call User B:
 User A connects to PeerServer and gets an ID
 User B connects to PeerServer and gets an ID
