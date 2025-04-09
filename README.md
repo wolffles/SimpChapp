@@ -3,8 +3,11 @@
 Simple Chat APP
 
 Node, express, socketIO, PeerJS, Vite, React
-in production it serves static files created using "npm run build"
-to deploy to fly.io flyctl deploy
+
+## to Deploy
+in production it serves static files created in dist/ 
+1. npm run build
+2. to deploy to fly.io flyctl deploy
 
 for dev/local "npm run dev" runs concurrently and nodemon to hot reload.
 

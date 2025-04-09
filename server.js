@@ -8,9 +8,8 @@ const path = require('path')
 console.log(process.env.PORT)
 const ioPort = process.env.PORT || 5050;
 const peerPort = process.env.PORT || 5051
-const htmlListen = app.listen(process.env.PORT || 3000)
-const ioListen = app.listen(ioPort, () => {console.log('app listening for io at port %d', ioPort);})
-const peerListen = app.listen(peerPort, () => {console.log('app listening for peer at port %d', peerPort);})
+const ioListen = app.listen(ioPort, '0.0.0.0', () => {console.log('app listening for io at port %d', ioPort);})
+const peerListen = app.listen(peerPort, '0.0.0.0', () => {console.log('app listening for peer at port %d', peerPort);})
 
 const io = require('socket.io')(ioListen);
 const peerServer = ExpressPeerServer(peerListen, {
