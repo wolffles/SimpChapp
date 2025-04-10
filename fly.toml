@@ -14,7 +14,6 @@ primary_region = 'dfw'
 
 [env]
   PORT = "5050"
-  PEER_PORT = "5051"
 
 [[services]]
   protocol = 'tcp'
@@ -25,25 +24,6 @@ primary_region = 'dfw'
     port = 80
     handlers = ['http']
     force_https = true
-
-  [[services.ports]]
-    port = 443
-    handlers = ['tls', 'http']
-
-  [services.concurrency]
-    type = 'connections'
-    hard_limit = 25
-    soft_limit = 20
-
-  [[services.tcp_checks]]
-    interval = '15s'
-    timeout = '2s'
-    grace_period = '1s'
-
-[[services]]
-  protocol = 'tcp'
-  internal_port = 5051
-  processes = ['app']
 
   [[services.ports]]
     port = 443

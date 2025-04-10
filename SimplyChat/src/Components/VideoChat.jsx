@@ -54,18 +54,15 @@ const VideoChat = () => {
             // Create new PeerJS instance with configuration
             const newPeer = new Peer({
                 host: hostname,
-                port: hostname === 'localhost' ? 5051 : 443,
+                port: hostname === 'localhost' ? 5050 : 443,
                 path: "/peerjs/peerConnect",
-                debug: 0,
-                // Configure STUN server for NAT traversal
+                debug: 3,
                 config: {
                     iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:stun1.l.google.com:19302' },
-                        { urls: 'stun:stun2.l.google.com:19302' }
+                        { urls: 'stun:stun.l.google.com:19302' }
                     ]
                 },
-                 secure: hostname !== 'localhost'
+                secure: hostname !== 'localhost'
             });
 
             // Handle successful connection

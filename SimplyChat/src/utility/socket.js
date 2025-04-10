@@ -1,25 +1,40 @@
 import io from 'socket.io-client';
 
-let host
-console.log("window.origin", window.origin)
 const getSocketHost = () => {
     if (window.location.hostname === 'localhost') {
-      return 'http://localhost:5050';
+        return 'http://localhost:5050';
     }
-    return undefined; // Let Socket.IO use the default relative path
-  };
+    // For production, use the current hostname with HTTPS
+    return `https://${window.location.hostname}`;
+};
 
-console.log('here is the host server', host);
-
-export const socket = io(getSocketHost(), {
-    transports: ['websocket', 'polling'],
+// Create socket with proper configuration
+const socket = io(getSocketHost(), {
+    transports: ['polling'],  // Start with polling only
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
     timeout: 20000,
+    path: '/socket.io/',
+    secure: window.location.hostname !== 'localhost',
+    withCredentials: true
 });
 
-export const hostname = window.location.hostname
+// Log connection events for debugging
+socket.on('connect', () => {
+    console.log('Socket connected successfully');
+});
+
+socket.on('connect_error', (error) => {
+    console.error('Socket connection error:', error);
+});
+
+socket.on('disconnect', (reason) => {
+    console.log('Socket disconnected:', reason);
+});
+
+export const hostname = window.location.hostname;
+
 // to server
 export const sendMessage = (data) => {
     socket.emit('user message', data);
@@ -37,4 +52,4 @@ export const updatePlayerInfo = (data) => {
     socket.emit('update player info', data)
 }
 
-//from server
+export { socket };

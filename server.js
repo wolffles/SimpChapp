@@ -25,32 +25,41 @@ app.set('trust proxy', true);
 app.use(httpLimiter);
 
 console.log(process.env.PORT)
-const ioPort = process.env.PORT || 5050;
-const peerPort = process.env.PORT || 5051
-const ioListen = app.listen(ioPort, '0.0.0.0', () => {console.log('app listening for io at port %d', ioPort);})
-const peerListen = app.listen(peerPort, '0.0.0.0', () => {console.log('app listening for peer at port %d', peerPort);})
-const io = new Server(ioListen, {
-  cors: {
-    origin: ["http://localhost:5173", "http://localhost:5050", "https://simply-chat-app.fly.dev"],  // Allow both your frontend and backend origins
-    methods: ["GET", "POST"],
-    credentials: true,
-    allowedHeaders: ["*"]
-  },
-  // Connection management options
-  pingTimeout: 5000,        // How long to wait for a pong response (default: 5s)
-  pingInterval: 25000,      // How often to ping the client (default: 25s)
-  upgradeTimeout: 10000,    // How long to wait for an upgrade response (default: 10s)
-  maxHttpBufferSize: 1e6,   // Maximum size of packets (default: 1MB)
-  transports: ['polling', 'websocket'],
-  connectTimeout: 600000,    // Disconnect if no connection after 10 minutes
-  serverClient: false,      // Don't connect to own server
-  disconnectOnUnload: true  // Disconnect when browser window closes
+const port = process.env.PORT || 5050;
+
+// Create a single server instance
+const server = app.listen(port, '0.0.0.0', () => {
+    console.log('Server listening on port %d', port);
 });
 
+// Configure Socket.IO with proper WebSocket handling
+const io = new Server(server, {
+    cors: {
+        origin: ["http://localhost:5173", "http://localhost:5050", "https://simply-chat-app.fly.dev"],
+        methods: ["GET", "POST"],
+        credentials: true,
+        allowedHeaders: ["*"]
+    },
+    path: '/socket.io/',
+    transports: ['polling', 'websocket'],
+    pingTimeout: 5000,
+    pingInterval: 25000,
+    upgradeTimeout: 10000,
+    maxHttpBufferSize: 1e6,
+    connectTimeout: 600000,
+    serverClient: false,
+    disconnectOnUnload: true,
+    allowEIO3: true,
+    allowUpgrades: true,
+    cookie: false
+});
 
-const peerServer = ExpressPeerServer(peerListen, {
-  debug:true,
-	path: "/peerConnect",
+// Configure PeerJS server
+const peerServer = ExpressPeerServer(server, {
+    debug: true,
+    path: "/peerConnect",
+    allow_discovery: true,
+    proxied: true
 });
 
 const __filename = fileURLToPath(import.meta.url);
@@ -71,7 +80,7 @@ app.use(express.urlencoded({ extended: true }));
 
 
 //localhost:5051/peerjs/peerConnect
-app.use('/peerjs',peerServer )
+app.use('/peerjs', peerServer);
 
 
 // Chatroom
@@ -110,19 +119,17 @@ const activeVideoSessions = new Map();
 
 // peerJS connection handling
 peerServer.on('connection', (client) => { 
-  try {
-    console.log('client connected', client.getId());
-    // Store peer connection metadata including connection time and last activity
-    activePeers.set(client.getId(), {
-      id: client.getId(),
-      connectedAt: Date.now(),
-      lastActive: Date.now()
-    });
-  } catch (error) {
-    console.error('Error in peer connection:', error);
-    // Force disconnect the client if there's an error during connection
-    client.destroy();
-  }
+    try {
+        console.log('client connected', client.getId());
+        activePeers.set(client.getId(), {
+            id: client.getId(),
+            connectedAt: Date.now(),
+            lastActive: Date.now()
+        });
+    } catch (error) {
+        console.error('Error in peer connection:', error);
+        client.destroy();
+    }
 });
 
 // Handle peer disconnection
