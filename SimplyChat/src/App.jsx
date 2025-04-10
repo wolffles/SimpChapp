@@ -42,7 +42,7 @@ function App() {
       <Router>
         <Box
           sx={{
-            minHeight: '100vh',
+            maxHeight: '100vh',
             bgcolor: 'background.default',
             display: 'flex',
             flexDirection: 'column',

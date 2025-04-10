@@ -310,7 +310,7 @@ const VideoChat = () => {
     }, []);
 
     return (
-        <div className={`videoContainer ${user ? "" : "hidden"}`}>
+        <div className={`video-space ${user ? "" : "hidden"}`} >
             <div className="video-toolbar" style={{display: 'flex', paddingTop: '10px', paddingBottom: '10px'}}>
                 <div className="toolbar-left">
                     <input
@@ -353,7 +353,7 @@ const VideoChat = () => {
                             transition: 'background-color 0.2s'
                         }}
                     >
-                        ID: {callId}
+                        call id: {callId}
                     </button>
                     {showCopied && (
                         <div style={{
@@ -388,16 +388,6 @@ const VideoChat = () => {
                 <div className="videoLabel">
                     {pinnedVideo === null ? 'Video not started' : pinnedVideo?.id === 'local' ? 'You' : 'Remote User'}
                 </div>
-                {/*                 
-                <div style={videoStyles.videoContainer}>
-                    <video 
-                        ref={remoteVideoRef} 
-                        autoPlay 
-                        playsInline 
-                        style={videoStyles.videoElement}
-                    />
-                    <div style={videoStyles.videoLabel}>Remote User</div>
-                </div> */}
             </div>
             <div className="video-thumbnails">
                 <div 
@@ -417,37 +407,3 @@ const VideoChat = () => {
 };
 
 export default VideoChat;
-
-{/* <div className="pinned-video">
-{pinnedVideo ? (
-    <video
-        ref={pinnedVideo.ref}
-        autoPlay
-        playsInline
-        muted={pinnedVideo.muted}
-        className="main-video"
-    />
-) : (
-    <div className="placeholder">No video pinned</div>
-)}
-</div>
-
-// {/* Thumbnail strip */}
-{/* <div className="video-thumbnails">
-    {console.log("videos array", videosMap)}
-{videosMap.map((video) => (
-    <div 
-        key={video.id}
-        className={`thumbnail ${video.id === pinnedVideo?.id ? 'active' : ''}`}
-        onClick={() => handleVideoClick(video)}
-    >
-        <video
-            ref={video.ref}
-            autoPlay
-            playsInline
-            muted={video.muted}
-        />
-    </div>
-))}
-</div> */}
-// </div> */}

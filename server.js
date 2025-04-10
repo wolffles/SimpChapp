@@ -21,6 +21,7 @@ const httpLimiter = rateLimit({
 });
 
 // Apply rate limiting to all routes
+app.set('trust proxy', true);
 app.use(httpLimiter);
 
 console.log(process.env.PORT)
