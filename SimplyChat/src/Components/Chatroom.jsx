@@ -97,15 +97,22 @@ const Chatroom = () => {
           <h1 style={{margin: 'auto', textAlign: 'center'}}>Simply Chat</h1>
           <MessageList messages={localMessageList} />   
         </div>
-        <div className={"inputMessageBox " + (image ? "withpreview" : "")}>
-          {/* the image && will not display if image is null */}
-          <div className='imgPreviewBox'>
-            {image && <img className="imgPreview" src={image} alt="Preview" style={{ maxWidth: '100px' }} />}
-          </div>
+        {/* the image && will not display if image is null */}
+        <div className='imgPreviewBox img-tooltip'>
+          {image && <img className="imgPreview" src={image} alt="Preview" 
+          style={{ maxWidth: '100px' }} 
+          onClick={() => {
+            setImage(null);
+            document.getElementById('imgTag').value = '';
+          }}
+          />}
+        </div>
+        <div className={"inputMessageBox" }>
           <form className="inputForm"onSubmit={submitMessage} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) {submitMessage(e)}}}>
               {/* File input for selecting image */}
               <input id='imgTag' type="file" onChange={handleImageChange} accept="image/*" />
               <textarea className="inputMessage"
+                rows={6}
                 placeholder="Type here..."
                 value={message}
                 onChange={(e) => {setMessage(e.target.value)}}

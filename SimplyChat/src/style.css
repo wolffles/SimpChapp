@@ -123,14 +123,14 @@
   }
   
   .messages {
-    height: 89%;
+    height: 85%;
     overflow-y: scroll;
     padding: 10px 20px 10px 20px;
     font-size: 100%;
   }
 
   .messages.withpreview{
-    height:78%;
+    height:85%;
   }
 
   .messageList {
@@ -194,7 +194,7 @@
     outline: none;
     width: 100%;
     height: auto;
-    min-height: 100px;
+    min-height: 150px;
     margin:auto;
     overflow-y:auto;
   }
@@ -218,24 +218,55 @@
 
   .inputForm {
     width: 90%;
-    margin:auto;
+    margin: auto;
+    position: relative;
   }
 
-  .imgPreviewBox{
-    width:90%;
-    margin:auto;
-    margin-top:5px;
+  .imgPreviewBox {
+    position: absolute;
+    width: 90%;
+    margin: auto;
+    bottom: 18%;
+    height: 100px;
+    padding-left: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .imgPreviewBox:has(img) {
+    opacity: 1;
+  }
+
+  .imgPreview {
+    max-width: 100px;
+    max-height: 100px;
+    cursor: pointer;
   }
   
+  .img-tooltip:hover::after {
+    content: "Click to delete";
+    position: absolute;
+    bottom: -25px;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
   .inputMessage::placeholder{
-    color:#fff;
+    color:#989494;
   }
   
   .inputMessage {
     color:#fff;
     width: 100%;
-    font-size: 100%;
-    border: none;
+    min-height: 40px;
+    max-height: 100px;
+    resize: vertical;
+    transition: height 0.3s ease;
     background-color: transparent;
   }
   .video-space {
