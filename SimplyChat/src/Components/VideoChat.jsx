@@ -398,7 +398,7 @@ const VideoChat = () => {
                         ref={pinnedVideo?.id === 'local' ? remoteVideoRef : localVideoRef}
                         autoPlay
                         playsInline
-                        muted={pinnedVideo?.id !== 'local'}
+                        muted={pinnedVideo?.id === 'local'}
                     />
                 </div>
             </div>
