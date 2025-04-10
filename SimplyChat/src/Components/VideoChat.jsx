@@ -23,7 +23,7 @@ const VideoChat = () => {
     const [isConnecting, setIsConnecting] = useState(false);
     // State to track if we're currently in an active call
     const [isInCall, setIsInCall] = useState(false);
-    const [videosMap, setVideosMap] = useState([]);
+
     const [pinnedVideo, setPinnedVideo] = useState(null);
     // Reference to the local video element
     const localVideoRef = useRef(null);
@@ -103,8 +103,8 @@ const VideoChat = () => {
      * Includes input validation and media device access
      */
     const handleCall = async () => {
-        //setVideosMap is async so we need to create a sync version to use in the if statement below.
-        let videoStreams = []
+
+
         // Validate remote peer ID
         if (!remotePeerId.trim()) {
             setError('Please enter a valid call ID');
@@ -129,12 +129,6 @@ const VideoChat = () => {
             if (localVideoRef.current) {
                 localVideoRef.current.srcObject = stream;
                 setLocalStream(stream);
-                videoStreams.push({
-                    id: "local",
-                    ref: localVideoRef,
-                    stream: stream,
-                    muted: true
-                });
             }
 
             // Initiate the call
@@ -143,18 +137,11 @@ const VideoChat = () => {
             // handleStream(stream, call);
             call.on('stream', (remoteStream) => {
                 if (remoteVideoRef.current) {
-                    if (!videoStreams.some(v => v.id === call.peer)) {
-                        remoteVideoRef.current.srcObject = remoteStream;
-                        videoStreams.push({
-                            id: call.peer,
-                            ref: remoteVideoRef,
-                            stream: remoteStream,
-                            muted: false
-                        });
-                    }
+                    remoteVideoRef.current.srcObject = remoteStream;
                 }
+                setPinnedVideo(remoteStream);
             });
-            setVideosMap(videoStreams);
+
         } catch (err) {
             setError('Failed to access media devices. Please check permissions.');
             setIsInCall(false);
@@ -168,7 +155,7 @@ const VideoChat = () => {
      */
     const handleIncomingCall = async (call) => {
         try {
-            let videoStreams = []
+
             setIsInCall(true);
             // Request access to user's media devices
             const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -179,12 +166,6 @@ const VideoChat = () => {
             if (localVideoRef.current) {
                 localVideoRef.current.srcObject = stream;
                 setLocalStream(stream);
-                videoStreams.push({
-                    id: 'local',
-                    ref: localVideoRef,
-                    stream: stream,
-                    muted: true
-                });
             }
             
             // Answer the call with the local stream
@@ -194,19 +175,11 @@ const VideoChat = () => {
              // Handle incoming stream from the caller
             call.on('stream', (remoteStream) => {
                 if (remoteVideoRef.current) {
-                    if (!videoStreams.some(v => v.id === call.peer)) {
-                        remoteVideoRef.current.srcObject = remoteStream;
-                        videoStreams.push({
-                            id: call.peer,
-                            ref: remoteVideoRef,
-                            stream: remoteStream,
-                            muted: false
-                        });
-                    }
-                    setPinnedVideo(remoteStream);
+                    remoteVideoRef.current.srcObject = remoteStream;
                 }
+                setPinnedVideo(remoteStream);
             });
-            setVideosMap(videoStreams);
+
         } catch (err) {
             setError('Failed to access media devices. Please check permissions.');
             call.close();
@@ -252,7 +225,7 @@ const VideoChat = () => {
             }
         });
         
-        setVideosMap(prevVideos => [...prevVideos, localvideo, remotevideo]);
+
         
         // Handle call closure
         call.on('close', () => {
@@ -282,15 +255,7 @@ const VideoChat = () => {
         setTimeout(() => setShowCopied(false), 1000);
     };
 
-    const videolabel = () => {
-        if(pinnedVideo?.id === 'local'){
-            return 'You'
-        }else if(pinnedVideo?.id === 'remote'){
-            return 'Remote User'
-        }else{
-            return 'Video not started'
-        }
-    }
+   
     /**
      * Clean up all connections and media streams
      * Ensures proper cleanup of all resources when ending a call
@@ -421,7 +386,7 @@ const VideoChat = () => {
                     className="main-video"
                 />
                 <div className="videoLabel">
-                    {videolabel()}
+                    {pinnedVideo === null ? 'Video not started' : pinnedVideo?.id === 'local' ? 'You' : 'Remote User'}
                 </div>
                 {/*                 
                 <div style={videoStyles.videoContainer}>
