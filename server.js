@@ -17,11 +17,29 @@ const app = express();
 const httpLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 1000, // limit each IP to 1000 requests per hour
-  message: "Too many requests from this IP, please try again after an hour"
+  message: "Too many requests from this IP, please try again after an hour",
+  trustProxy: false, // Disable the built-in trust proxy check
+    handler: (req, res) => {
+        res.status(429).send('Too many requests, please try again later.');
+    }
 });
 
+// app.set setting is more about telling Express "hey, when you see requests coming from these proxies, look at the X-Forwarded-For header to find the real client's IP address" rather than using the proxy's IP address.
+// Here's a simple example:
+// A user with IP 82.45.67.89 makes a request to your app
+// The request goes through fly.io's proxy (IP 172.16.1.250)
+// Without trust proxy:
+// Express sees the request as coming from 172.16.1.250
+// Rate limiting would apply to fly.io's proxy IP
+// All users would share the same rate limit because they all appear to come from the proxy!
+// With trust proxy:
+// Express looks at the X-Forwarded-For header
+// Sees the original IP 82.45.67.89
+// Rate limiting applies to each user's real IP
+// Each user gets their own rate limit
+// So it's not about overlooking proxies, it's about looking past them to find the real source of the request. This is crucial for rate limiting to work properly in a proxied environment like fly.io.
+app.set('trust proxy',['loopback', 'linklocal', 'uniquelocal']);
 // Apply rate limiting to all routes
-app.set('trust proxy', true);
 app.use(httpLimiter);
 
 console.log(process.env.PORT)
