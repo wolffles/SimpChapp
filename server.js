@@ -139,8 +139,9 @@ const activeVideoSessions = new Map();
 peerServer.on('connection', (client) => { 
     try {
         console.log('client connected', client.getId());
-        activePeers.set(client.getId(), {
-            id: client.getId(),
+        const peerId = client.getId();
+        activePeers.set(peerId, {
+            id: peerId,
             connectedAt: Date.now(),
             lastActive: Date.now()
         });
@@ -155,7 +156,8 @@ peerServer.on('disconnect', (client) => {
   try {
     console.log("client disconnected", client.getId());
     // Remove peer from active connections tracking
-    activePeers.delete(client.getId());
+    const peerId = client.getId();
+    activePeers.delete(peerId);
   } catch (error) {
     console.error('Error in peer disconnect:', error);
   }
@@ -177,13 +179,11 @@ setInterval(() => {
     if (now - peerData.lastActive > 600000) {
       console.log(`Removing inactive peer: ${peerId}`);
       activePeers.delete(peerId);
-      const client = peerServer.getPeer(peerId);
-      if (client) {
-        client.destroy();
-      }
+      // Emit a custom close event to force disconnect the peer
+      peerServer.emit('connection-close', peerId);
     }
   }
-}, 300000); // Check every 5 minutes (300000ms)
+}, 300000); // Check every 5 minutes
 
 // Websocket stuff
 let rooms = {

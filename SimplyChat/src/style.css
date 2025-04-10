@@ -205,7 +205,16 @@
 
   .callInput {
     width:90%;
+    align-items: center;
   }
+
+  .scaleHover:hover {
+    transform: scale(1.50);
+} 
+
+.scaleHover:active {
+  transform: scale(0.85);
+}
 
   .inputForm {
     width: 90%;

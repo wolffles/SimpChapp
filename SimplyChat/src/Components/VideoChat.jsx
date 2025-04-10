@@ -3,6 +3,8 @@ import React, {useEffect, useState, useContext, useRef} from 'react'
 import { useNavigate } from 'react-router-dom';
 import {hostname} from '../utility/socket'
 import userContext from "../context/UserContext";
+import CallRoundedIcon from '@mui/icons-material/CallRounded';
+import CallEndRoundedIcon from '@mui/icons-material/CallEndRounded';
 
 const VideoChat = () => {
     const navigateTo = useNavigate();
@@ -81,8 +83,18 @@ const VideoChat = () => {
 
             // Handle disconnection with automatic reconnection
             newPeer.on('disconnected', () => {
-                setError('Disconnected from server. Attempting to reconnect...');
-                newPeer.reconnect();
+                let attempts = 0;
+                const maxAttempts = 10;
+                const attemptReconnect = () => {
+                    if (attempts < maxAttempts) {
+                        setError(`Disconnected from server. Attempting to reconnect... (Attempt ${attempts + 1}/${maxAttempts})`);
+                        newPeer.reconnect();
+                        attempts++;
+                    } else {
+                        setError('Unable to reconnect. Please refresh the page to try again.');
+                    }
+                };
+                attemptReconnect();
             });
 
             // Handle permanent connection closure
@@ -311,8 +323,8 @@ const VideoChat = () => {
 
     return (
         <div className={`video-space ${user ? "" : "hidden"}`} >
-            <div className="video-toolbar" style={{display: 'flex', paddingTop: '10px', paddingBottom: '10px'}}>
-                <div className="toolbar-left">
+            <div className="video-toolbar" style={{display: 'flex', paddingTop: '10px', paddingBottom: '5px'}}>
+                <div className="toolbar-left"   style={{paddingLeft: '10px', display: 'flex', alignItems: 'center'}}>
                     <input
                         className="call-input"
                         type="text"
@@ -322,21 +334,31 @@ const VideoChat = () => {
                         disabled={isInCall}
                     />
                     <button 
-                        className="toolbar-button call-button"
+                        style={{
+                            backgroundColor: 'transparent', 
+                            border: 'none', 
+                            outline: 'none', 
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s ease',
+                            padding: '8px',
+                            borderRadius: '4px'
+                        }}
+                        className="toolbar-button call-button scaleHover"
                         onClick={handleCall}
                         disabled={isInCall || isConnecting}
                     >
-                        Call
+                        <CallRoundedIcon sx={{color: 'green', outline: 'none'}}/>
                     </button>
                     <button 
-                        className="toolbar-button end-button"
+                        style={{backgroundColor: 'transparent', border: 'none', outline: 'none'}}
+                        className="toolbar-button end-button scaleHover"
                         onClick={endCall}
                         disabled={!isInCall}
                     >
-                        End
+                        <CallEndRoundedIcon sx={{color: 'red', fill: 'red', cursor: 'pointer', outline: 'none'}}/>
                     </button>
                 </div>
-                <div className="toolbar-right" style={{marginLeft: 'auto', cursor: 'pointer', position: 'relative'}}>
+                <div className="toolbar-right" style={{marginLeft: 'auto', cursor: 'pointer', position: 'relative', paddingRight: '10px',}}>
                     <button 
                         className="call-id" 
                         onClick={() => {
@@ -348,7 +370,7 @@ const VideoChat = () => {
                           
                         }} 
                         style={{
-                            paddingRight: '20px', 
+                            
                             cursor: 'pointer',
                             transition: 'background-color 0.2s'
                         }}
@@ -373,7 +395,7 @@ const VideoChat = () => {
                     )}
                 </div>
             </div>
-            <div className="toolbar-messages">
+            <div className="toolbar-messages" style={{paddingLeft: '10px'}}>
                     {error && <div className="error-message">{error}</div>}
                     {isConnecting && <div className="connecting-message">Connecting to server...</div>}
                 </div>
