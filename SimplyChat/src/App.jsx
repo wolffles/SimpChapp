@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
 import Login from './Components/Login';
 import Chatroom from './Components/Chatroom';
@@ -35,6 +35,18 @@ const theme = createTheme({
 
 function App() {
   const { user } = useContext(userContext);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  const handleResize = () => {
+    setIsMobile(window.innerWidth <= 768);
+  };
+
+  useEffect(() => {
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   return (
     <ThemeProvider theme={theme}>
@@ -52,6 +64,7 @@ function App() {
             <Login />
           ) : (
             <Box
+              id="app-container"
               sx={{
                 display: 'flex',
                 flex: 1,
@@ -69,15 +82,15 @@ function App() {
                   flexDirection: 'column',
                   overflow: 'hidden',
                   bgcolor: 'background.paper',
-                  borderRadius: 2,
-                  boxShadow: 3,
+                  borderRadius: 3,
                 }}
               >
-                <Chatroom />
+                <Chatroom isMobile={isMobile} />
               </Box>
 
               {/* Video Section - 60% width */}
               <Box
+                id='video-box'
                 sx={{
                   width: '100%',
                   display: 'flex',

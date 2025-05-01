@@ -5,6 +5,8 @@ import {hostname} from '../utility/socket'
 import userContext from "../context/UserContext";
 import CallRoundedIcon from '@mui/icons-material/CallRounded';
 import CallEndRoundedIcon from '@mui/icons-material/CallEndRounded';
+import MicIcon from '@mui/icons-material/Mic';
+import MicOffIcon from '@mui/icons-material/MicOff';
 
 const VideoChat = () => {
     const navigateTo = useNavigate();
@@ -25,7 +27,6 @@ const VideoChat = () => {
     const [isConnecting, setIsConnecting] = useState(false);
     // State to track if we're currently in an active call
     const [isInCall, setIsInCall] = useState(false);
-
     const [pinnedVideo, setPinnedVideo] = useState(null);
     // Reference to the local video element
     const localVideoRef = useRef(null);
@@ -199,57 +200,57 @@ const VideoChat = () => {
         }
     };
 
-    /**
-     * Handle media streams with error checking
-     * Manages both local and remote streams
-     * Sets up event handlers for stream events
-     */
-    const handleStream = (stream, call) => {
-        // Set up local video stream
-        let localvideo;
-        let remotevideo;
+    // /**
+    //  * Handle media streams with error checking
+    //  * Manages both local and remote streams
+    //  * Sets up event handlers for stream events
+    //  */
+    // const handleStream = (stream, call) => {
+    //     // Set up local video stream
+    //     let localvideo;
+    //     let remotevideo;
 
-        if (localVideoRef.current) {
-            console.log("local video ref", localVideoRef.current)
-            localVideoRef.current.srcObject = stream;
-            setLocalStream(stream);
-            localvideo =  {
-                    id: call.peer || "local",
-                    ref: localVideoRef,
-                    stream: stream,
-                    muted: true
-                };
-        }
+    //     if (localVideoRef.current) {
+    //         console.log("local video ref", localVideoRef.current)
+    //         localVideoRef.current.srcObject = stream;
+    //         setLocalStream(stream);
+    //         localvideo =  {
+    //                 id: call.peer || "local",
+    //                 ref: localVideoRef,
+    //                 stream: stream,
+    //                 muted: true
+    //             };
+    //     }
 
-        // Handle incoming remote stream
-        call.on('stream', (remoteStream) => {
-            if (remoteVideoRef.current) {
-                console.log("remote video ref", remoteVideoRef.current)
-                remoteVideoRef.current.srcObject = remoteStream;
-                setRemoteStream(remoteStream);
-                remotevideo = {
-                    id: call.peer,
-                    ref: remoteVideoRef,
-                    stream: remoteStream,
-                    muted: false
-                };
-                setPinnedVideo(remotevideo);
-            }
-        });
+    //     // Handle incoming remote stream
+    //     call.on('stream', (remoteStream) => {
+    //         if (remoteVideoRef.current) {
+    //             console.log("remote video ref", remoteVideoRef.current)
+    //             remoteVideoRef.current.srcObject = remoteStream;
+    //             setRemoteStream(remoteStream);
+    //             remotevideo = {
+    //                 id: call.peer,
+    //                 ref: remoteVideoRef,
+    //                 stream: remoteStream,
+    //                 muted: false
+    //             };
+    //             setPinnedVideo(remotevideo);
+    //         }
+    //     });
         
 
         
-        // Handle call closure
-        call.on('close', () => {
-            endCall();
-        });
+    //     // Handle call closure
+    //     call.on('close', () => {
+    //         endCall();
+    //     });
 
-        // Handle call errors
-        call.on('error', (err) => {
-            setError(`Call error: ${err.message}`);
-            endCall();
-        });
-    };
+    //     // Handle call errors
+    //     call.on('error', (err) => {
+    //         setError(`Call error: ${err.message}`);
+    //         endCall();
+    //     });
+    // };
 
     const handleVideoClick = () => {
         setPinnedVideo({
@@ -306,6 +307,54 @@ const VideoChat = () => {
 
         setIsInCall(false);
     };
+
+    const videoControls = () => {
+        return (
+            <div id="video-toolbar-controls"
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        gap: '10px',
+                        position: 'absolute',
+                        bottom: '10px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        zIndex: 1000
+                    }}
+                >
+                    <button className="scaleHover" style={{backgroundColor: 'transparent', color: 'red', cursor: 'pointer', border: 'none', outline: 'none'}} onClick={endCall}>
+                        <CallEndRoundedIcon />
+                    </button>
+                    <button 
+                        className="scaleHover"
+                        onClick={() => {
+                            if (localStream) {
+                                const audioTrack = localStream.getAudioTracks()[0];
+                                if (audioTrack) {
+                                    audioTrack.enabled = !audioTrack.enabled;
+                                    // Force a re-render by updating state
+                                    setLocalStream(prev => new MediaStream([...prev.getTracks()]));
+                                }
+                            }
+                        }}
+                        style={{
+                            backgroundColor: 'transparent',
+                            border: 'none',
+                            outline: 'none',
+                            cursor: 'pointer',
+                            padding: '8px',
+                            borderRadius: '4px'
+                        }}
+                    >
+                        {localStream && localStream.getAudioTracks()[0]?.enabled ? 
+                            <MicIcon sx={{color: 'green'}}/> : 
+                            <MicOffIcon sx={{color: 'red'}}/>
+                        }
+                    </button>
+                </div>
+        )
+    }
 
     // Initialize peer connection on component mount
     useEffect(() => {
@@ -407,6 +456,7 @@ const VideoChat = () => {
                     playsInline 
                     className="main-video"
                 />
+                {videoControls()}
                 <div className="videoLabel">
                     {pinnedVideo === null ? 'Video not started' : pinnedVideo?.id === 'local' ? 'You' : 'Remote User'}
                 </div>

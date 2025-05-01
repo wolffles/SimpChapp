@@ -17,7 +17,8 @@ const socket = io(getSocketHost(), {
     timeout: 20000,
     path: '/socket.io/',
     secure: window.location.hostname !== 'localhost',
-    withCredentials: true
+    withCredentials: true, 
+    closeOnBeforeunload: false
 });
 
 // Log connection events for debugging

@@ -21,7 +21,7 @@ export default function MessageList({ messages} ) {
         userObj = <div className={"usernameText"} key={i} style={{color:getUsernameColor(message[1])}}>{message[1]}</div>
         // if image
         if(message[2]){
-          imgObj = <img src={message[2]} key={i} alt="Preview" style={{ maxWidth: '100px' }} />
+          imgObj = <img src={message[2]} key={i+"img"} alt="Preview" style={{ maxWidth: '100px' }} />
         }
         // handle links
         if(isLink(message[0])){

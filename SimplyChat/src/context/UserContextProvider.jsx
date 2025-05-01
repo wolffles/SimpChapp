@@ -6,7 +6,7 @@ const UserContextProvider = ({children}) => {
 
     // Add debugging for user state changes
     React.useEffect(() => {
-        console.log('User state changed:', user);
+        // console.log('User state changed:', user);
     }, [user]);
 
     // Wrap setUser to add debugging

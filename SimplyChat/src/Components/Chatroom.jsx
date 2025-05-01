@@ -3,13 +3,14 @@ import userContext from '../context/UserContext'
 import {sendMessage, socket} from '../utility/socket.js';
 import MessageList from './MessageList.jsx'
 import {cleanInput} from '../utility/clientChatRoom.js'
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
-const Chatroom = () => {
+const Chatroom = ({isMobile}) => {
   const {user} = useContext(userContext)
   const [message, setMessage] = useState('')
   const [image, setImage] = useState(null);
   const [localMessageList, setLocalMessageList] = useState([])
-
+  const [isOpen, setIsOpen] = useState(false);
   function addMessage(message, username, image = null ){
     let updatedState = Object.assign([],localMessageList);
     if(!!image){
@@ -44,6 +45,11 @@ const Chatroom = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const toggleMobileChat = () => {
+    console.log("toggleMobileChat", isOpen)
+    setIsOpen(!isOpen);
   };
 
 
@@ -90,8 +96,37 @@ const Chatroom = () => {
     };
   });
 
+  useEffect(() => {
+      if(!isMobile){
+      setIsOpen(false)
+      }
+  }, [isMobile])
+
+  // sx={{
+  //   display: 'flex',
+  //   flexDirection: 'column',
+  //   overflow: 'hidden',
+  //   bgcolor: 'background.paper',
+  //   borderRadius: 2,
+  //   boxShadow: 3,
+  // }}
   return (
-    <div className={`chat ${user ? "" : "hidden"}`}>
+    <div className={`${isMobile ? "mobile-chat-container" : "chat-container"} ${isOpen ? "active" : ""}`}>
+      {isMobile && (
+        <div className={`mobileChatToggle ${isOpen ? "active" : ""}`}
+            style={{
+                width: '100%',
+                color: 'white',
+                backgroundColor: 'black',
+                textAlign: 'center',
+                fontSize: '2rem',
+                height: '50px'
+            }}
+            onClick={toggleMobileChat}
+        >
+            <ExpandLessIcon onClick={toggleMobileChat}/>
+        </div>
+      )}
       <div className="chatArea">
         <div id="messages" className={"messages "+ (image ? "withpreview" : "")}>
           <h1 style={{margin: 'auto', textAlign: 'center'}}>Simply Chat</h1>

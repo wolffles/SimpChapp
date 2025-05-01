@@ -44,9 +44,9 @@ const Login = () => {
 
         try {
             const tempUser = {username: username, roomName: 'global'};
-            console.log('Setting user:', tempUser);
+            // console.log('Setting user:', tempUser);
             setUser(tempUser);
-            console.log('Emitting add user event');
+            // console.log('Emitting add user event');
             socket.emit('add user', tempUser);
         } catch (err) {
             console.error('Error in handleSubmit:', err);

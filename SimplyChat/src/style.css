@@ -2,6 +2,8 @@
 
 * {
     box-sizing: border-box;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 
   body {
@@ -22,6 +24,10 @@
       Arial,
       "Lucida Grande",
       sans-serif;
+  }
+
+  input, textarea {
+    border: none;
   }
   
   ul {
@@ -111,9 +117,30 @@
   }
   
   /* Messages */
-  .chat {
-
+  .chat-container {
     height: 100%;
+  }
+  .mobile-chat-container {
+    position: fixed;
+    left: 0;
+    bottom: 0px;
+    width: 100%;
+    height: 95vh; /* Drawer will take up 95vh of viewport height */
+    transform: translateY(calc(100% - 40px)); /* Show just the handle */
+    z-index: 999;
+    transition: transform 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #181818;
+  }
+
+  .mobile-chat-container.active {
+    transform: translateY(0);
+  }
+
+  .mobileChatToggle svg {
+    transition: transform .5s ease;
+  }
+  .mobile-chat-container.active .mobileChatToggle svg {
+    transform: rotate(180deg);
   }
   
   .chatArea {
@@ -344,6 +371,10 @@
   @media (max-width: 768px) {
     .video-thumbnails {
       height: 100px;
+    }
+
+    #app-container {
+      gap: 0px;
     }
     
     .thumbnail {
