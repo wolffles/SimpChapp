@@ -320,7 +320,7 @@ const VideoChat = () => {
                         bottom: '10px',
                         left: '50%',
                         transform: 'translateX(-50%)',
-                        zIndex: 1000
+                        zIndex: 200
                     }}
                 >
                     <button className="scaleHover" style={{backgroundColor: 'transparent', color: 'red', cursor: 'pointer', border: 'none', outline: 'none'}} onClick={endCall}>
