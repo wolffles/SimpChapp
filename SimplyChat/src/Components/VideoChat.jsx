@@ -330,16 +330,14 @@ const VideoChat = () => {
                     <button className="scaleHover" style={{backgroundColor: 'transparent', color: 'red', cursor: 'pointer', border: 'none', outline: 'none'}} onClick={endCall}>
                         <CallEndRoundedIcon />
                     </button>
-                    <button 
+                    <button
                         className="scaleHover"
                         onClick={() => {
                             if (localStream) {
-                                const audioTrack = localStream.getAudioTracks()[0];
-                                if (audioTrack) {
-                                    audioTrack.enabled = !audioTrack.enabled;
-                                    // Force a re-render by updating state
-                                    setIsMuted(!isMuted);
-                                }
+                                localStream.getAudioTracks().forEach(track => {
+                                    track.enabled = !track.enabled;
+                                });
+                                setIsMuted(prev => !prev);
                             }
                         }}
                         style={{
@@ -349,11 +347,11 @@ const VideoChat = () => {
                             cursor: 'pointer',
                             padding: '8px',
                             borderRadius: '4px'
-                        }}
-                    >
-                        {isMuted && localStream && localStream.getAudioTracks()[0]?.enabled ? 
-                            <MicIcon sx={{color: 'green'}}/> : 
-                            <MicOffIcon sx={{color: 'red'}}/>
+                            }}
+                        >
+                        {isMuted ? 
+                            <MicOffIcon sx={{color: 'red'}}/> : 
+                            <MicIcon sx={{color: 'green'}}/>
                         }
                     </button>
                 </div>
@@ -385,6 +383,9 @@ const VideoChat = () => {
                         value={remotePeerId}
                         onChange={(e) => setRemotePeerId(e.target.value)}
                         disabled={isInCall}
+                        style={{
+                            borderRadius: '10px'
+                        }}
                     />
                     <button 
                         style={{
@@ -425,7 +426,8 @@ const VideoChat = () => {
                         style={{
                             
                             cursor: 'pointer',
-                            transition: 'background-color 0.2s'
+                            transition: 'background-color 0.2s',
+                            borderRadius: '10px'
                         }}
                     >
                         call id: {callId}
@@ -456,7 +458,7 @@ const VideoChat = () => {
                 <video 
                     ref={pinnedVideo?.id === 'local' ? localVideoRef : remoteVideoRef} 
                     autoPlay 
-                    muted 
+                    muted={pinnedVideo?.id === 'local'}
                     playsInline 
                     className="main-video"
                 />
