@@ -375,6 +375,7 @@
 
     #app-container {
       gap: 0px;
+      padding: 5px;
     }
     
     .thumbnail {
