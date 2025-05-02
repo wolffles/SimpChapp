@@ -35,6 +35,7 @@ const VideoChat = () => {
     // Reference to store the connection timeout ID for cleanup
     const connectionTimeoutRef = useRef(null);
     const [showCopied, setShowCopied] = useState(false);
+    const [isMuted, setIsMuted] = useState(false);
 
     // Add these constraints for better mobile support
     const mediaConstraints = {
@@ -337,7 +338,7 @@ const VideoChat = () => {
                                 if (audioTrack) {
                                     audioTrack.enabled = !audioTrack.enabled;
                                     // Force a re-render by updating state
-                                    setLocalStream(prev => new MediaStream([...prev.getTracks()]));
+                                    setIsMuted(!isMuted);
                                 }
                             }
                         }}
@@ -350,7 +351,7 @@ const VideoChat = () => {
                             borderRadius: '4px'
                         }}
                     >
-                        {localStream && localStream.getAudioTracks()[0]?.enabled ? 
+                        {isMuted && localStream && localStream.getAudioTracks()[0]?.enabled ? 
                             <MicIcon sx={{color: 'green'}}/> : 
                             <MicOffIcon sx={{color: 'red'}}/>
                         }
