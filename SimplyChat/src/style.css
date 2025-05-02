@@ -224,6 +224,7 @@
     min-height: 150px;
     margin:auto;
     overflow-y:auto;
+    font-size: 16px;
   }
 
   .inputMessage:focus {

@@ -48,7 +48,7 @@ const Chatroom = ({isMobile}) => {
   };
 
   const toggleMobileChat = () => {
-    console.log("toggleMobileChat", isOpen)
+
     setIsOpen(!isOpen);
   };
 

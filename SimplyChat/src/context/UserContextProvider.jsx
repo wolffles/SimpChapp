@@ -11,7 +11,7 @@ const UserContextProvider = ({children}) => {
 
     // Wrap setUser to add debugging
     const handleSetUser = (newUser) => {
-        console.log('Setting new user:', newUser);
+        // console.log('Setting new user:', newUser);
         setUser(newUser);
     };
 

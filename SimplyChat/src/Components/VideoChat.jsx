@@ -36,6 +36,21 @@ const VideoChat = () => {
     const connectionTimeoutRef = useRef(null);
     const [showCopied, setShowCopied] = useState(false);
 
+    // Add these constraints for better mobile support
+    const mediaConstraints = {
+        video: {
+            facingMode: 'user', // Use front camera by default
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            aspectRatio: { ideal: 1.7777777778 }
+        },
+        audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+        }
+    };
+
     /**
      * Initialize PeerJS connection with error handling and timeout
      * Sets up the peer connection with proper error handling and connection timeout
@@ -132,15 +147,39 @@ const VideoChat = () => {
 
         try {
             setIsInCall(true);
-            // Request access to user's media devices
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: true, 
-                audio: true 
+            
+            // Check if the browser supports getUserMedia
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('Your browser does not support media devices. Please try a different browser.');
+            }
+
+            // Check if the device has the required media capabilities
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const hasVideo = devices.some(device => device.kind === 'videoinput');
+            const hasAudio = devices.some(device => device.kind === 'audioinput');
+
+            if (!hasVideo || !hasAudio) {
+                throw new Error(`Missing required devices: ${!hasVideo ? 'camera ' : ''}${!hasAudio ? 'microphone' : ''}`);
+            }
+
+            // Request permissions with fallback options
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: hasVideo ? mediaConstraints.video : false,
+                audio: hasAudio ? mediaConstraints.audio : false
+            }).catch(async (err) => {
+                console.warn('Failed to get ideal constraints, trying fallback:', err);
+                // Fallback to basic constraints
+                return navigator.mediaDevices.getUserMedia({
+                    video: hasVideo ? true : false,
+                    audio: hasAudio ? true : false
+                });
             });
 
             // Set up local video stream
             if (localVideoRef.current) {
                 localVideoRef.current.srcObject = stream;
+                // Ensure video plays on iOS Safari
+                localVideoRef.current.setAttribute('playsinline', 'true');
                 setLocalStream(stream);
             }
 
@@ -151,13 +190,22 @@ const VideoChat = () => {
             call.on('stream', (remoteStream) => {
                 if (remoteVideoRef.current) {
                     remoteVideoRef.current.srcObject = remoteStream;
+                    // Ensure video plays on iOS Safari
+                    remoteVideoRef.current.setAttribute('playsinline', 'true');
                 }
                 setPinnedVideo(remoteStream);
             });
 
         } catch (err) {
-            setError('Failed to access media devices. Please check permissions.');
+            console.error('Media access error:', err);
             setIsInCall(false);
+            setError(
+                err.name === 'NotAllowedError' ? 
+                'Camera/Microphone access denied. Please check your permissions.' :
+                err.name === 'NotFoundError' ? 
+                'No camera or microphone found on your device.' :
+                `Failed to access media devices: ${err.message}`
+            );
         }
     };
 
@@ -168,16 +216,21 @@ const VideoChat = () => {
      */
     const handleIncomingCall = async (call) => {
         try {
-
             setIsInCall(true);
             // Request access to user's media devices
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: true, 
-                audio: true 
-            });
-            // Set up local video
+            const stream = await navigator.mediaDevices.getUserMedia(mediaConstraints)
+                .catch(async () => {
+                    // Fallback to basic constraints
+                    return navigator.mediaDevices.getUserMedia({
+                        video: true,
+                        audio: true
+                    });
+                });
+
+            // Set up local video stream
             if (localVideoRef.current) {
                 localVideoRef.current.srcObject = stream;
+                localVideoRef.current.setAttribute('playsinline', 'true');
                 setLocalStream(stream);
             }
             
@@ -189,68 +242,18 @@ const VideoChat = () => {
             call.on('stream', (remoteStream) => {
                 if (remoteVideoRef.current) {
                     remoteVideoRef.current.srcObject = remoteStream;
+                    remoteVideoRef.current.setAttribute('playsinline', 'true');
                 }
                 setPinnedVideo(remoteStream);
             });
 
         } catch (err) {
-            setError('Failed to access media devices. Please check permissions.');
+            console.error('Media access error:', err);
+            setError(`Failed to access media devices: ${err.message}`);
             call.close();
             setIsInCall(false);
         }
     };
-
-    // /**
-    //  * Handle media streams with error checking
-    //  * Manages both local and remote streams
-    //  * Sets up event handlers for stream events
-    //  */
-    // const handleStream = (stream, call) => {
-    //     // Set up local video stream
-    //     let localvideo;
-    //     let remotevideo;
-
-    //     if (localVideoRef.current) {
-    //         console.log("local video ref", localVideoRef.current)
-    //         localVideoRef.current.srcObject = stream;
-    //         setLocalStream(stream);
-    //         localvideo =  {
-    //                 id: call.peer || "local",
-    //                 ref: localVideoRef,
-    //                 stream: stream,
-    //                 muted: true
-    //             };
-    //     }
-
-    //     // Handle incoming remote stream
-    //     call.on('stream', (remoteStream) => {
-    //         if (remoteVideoRef.current) {
-    //             console.log("remote video ref", remoteVideoRef.current)
-    //             remoteVideoRef.current.srcObject = remoteStream;
-    //             setRemoteStream(remoteStream);
-    //             remotevideo = {
-    //                 id: call.peer,
-    //                 ref: remoteVideoRef,
-    //                 stream: remoteStream,
-    //                 muted: false
-    //             };
-    //             setPinnedVideo(remotevideo);
-    //         }
-    //     });
-        
-
-        
-    //     // Handle call closure
-    //     call.on('close', () => {
-    //         endCall();
-    //     });
-
-    //     // Handle call errors
-    //     call.on('error', (err) => {
-    //         setError(`Call error: ${err.message}`);
-    //         endCall();
-    //     });
-    // };
 
     const handleVideoClick = () => {
         setPinnedVideo({
