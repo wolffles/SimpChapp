@@ -18,7 +18,9 @@ const socket = io(getSocketHost(), {
     path: '/socket.io/',
     secure: window.location.hostname !== 'localhost',
     withCredentials: true, 
-    closeOnBeforeunload: false
+    forceNew: true,
+    closeOnBeforeunload: false,
+    autoConnect: true,
 });
 
 // Log connection events for debugging
